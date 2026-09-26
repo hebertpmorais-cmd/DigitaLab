@@ -372,6 +372,21 @@ function Learn({ user }) {
       title: 'Movimento correto',
       src: '/learn/movimento-dedos-ratoturbo.svg',
       text: 'O dedo alcança a tecla da região dele e depois volta para a posição inicial. Evite deslocar a mão inteira.'
+    },
+    {
+      title: 'Região de cada dedo',
+      src: '/learn/regioes-dedos-ratoturbo.svg',
+      text: 'Veja quais teclas ficam sob responsabilidade de cada dedo para diminuir movimentos desnecessários.'
+    },
+    {
+      title: 'Postura correta',
+      src: '/learn/postura-correta-ratoturbo.svg',
+      text: 'Mantenha costas apoiadas, ombros relaxados, cotovelos próximos de 90° e punhos neutros.'
+    },
+    {
+      title: 'Erros comuns',
+      src: '/learn/erros-comuns-ratoturbo.svg',
+      text: 'Evite olhar para o teclado, mover a mão inteira, levantar os punhos e manter os dedos rígidos.'
     }
   ]
 
@@ -459,7 +474,8 @@ function Learn({ user }) {
       </div>
 
       <div className="learn-image-grid visual-guides">
-        {learnImages.map(item => <div className="learn-image-card" key={item.title}>
+        {learnImages.map((item,index) => <div className="learn-image-card" key={item.title}>
+          <div className="guide-number">{index + 1}</div>
           <img src={item.src} alt={item.title} />
           <div><b>{item.title}</b><p>{item.text}</p></div>
         </div>)}
