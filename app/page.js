@@ -449,7 +449,7 @@ function Dashboard({ user, refreshKey }) {
   useEffect(() => {
     if (!user) { setSessions([]); return }
     setLoading(true)
-    supabase.from('typing_sessions').select('*').order('created_at', { ascending: false }).limit(50)
+    supabase.from('typing_sessions').select('*').order('created_at', { ascending: false }).limit(500)
       .then(({ data }) => { setSessions(data || []); setLoading(false) })
   }, [user, refreshKey])
 
@@ -468,11 +468,55 @@ function Dashboard({ user, refreshKey }) {
   }, 0)
   const level = Math.floor(totalXp / 200) + 1
   const xpInLevel = totalXp % 200
+  const localDateKey = (value) => {
+    const date = value instanceof Date ? value : new Date(value)
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const today = new Date()
+  const todayKey = localDateKey(today)
+  const dailyGoal = 5
+  const todayCount = sessions.filter(s => localDateKey(s.created_at) === todayKey).length
+  const dailyProgress = Math.min(100, (todayCount / dailyGoal) * 100)
+
+  const activityByDay = {}
+  sessions.forEach(s => {
+    const key = localDateKey(s.created_at)
+    activityByDay[key] = (activityByDay[key] || 0) + 1
+  })
+
+  const weekDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (6 - index))
+    const key = localDateKey(date)
+    return {
+      key,
+      label: date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''),
+      count: activityByDay[key] || 0,
+      today: key === todayKey
+    }
+  })
+
+  const uniqueDays = new Set(Object.keys(activityByDay))
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+
+  let streakCursor = uniqueDays.has(todayKey) ? new Date(today) : new Date(yesterday)
+  let streak = 0
+  while (uniqueDays.has(localDateKey(streakCursor))) {
+    streak++
+    streakCursor.setDate(streakCursor.getDate() - 1)
+  }
+
   const achievements = [
     { title: 'Primeira corrida', done: count >= 1, note: 'Complete 1 corrida.' },
     { title: 'Pegando ritmo', done: count >= 10, note: 'Complete 10 corridas.' },
     { title: 'Precisão afiada', done: sessions.some(s => Number(s.accuracy) >= 98), note: 'Faça uma corrida com 98% ou mais de precisão.' },
-    { title: 'Turbo ligado', done: sessions.some(s => s.wpm >= 60), note: 'Alcance 60 PPM em uma corrida.' }
+    { title: 'Turbo ligado', done: sessions.some(s => s.wpm >= 60), note: 'Alcance 60 PPM em uma corrida.' },
+    { title: 'Na rotina', done: streak >= 3, note: 'Treine por 3 dias seguidos.' }
   ]
 
   return <section className="dashboard-stack">
@@ -490,6 +534,32 @@ function Dashboard({ user, refreshKey }) {
         </div>
         <div className="progress-track"><span style={{ width: `${(xpInLevel / 200) * 100}%` }} /></div>
         <small>Cada corrida rende XP. Precisão alta e velocidade dão um bônus pequeno.</small>
+      </div>
+
+      <div className="routine-grid">
+        <div className="routine-card">
+          <div className="routine-title"><span>Meta de hoje</span><strong>{todayCount}/{dailyGoal}</strong></div>
+          <div className="routine-track"><span style={{ width: `${dailyProgress}%` }} /></div>
+          <small>{todayCount >= dailyGoal ? 'Meta concluída hoje.' : `Faltam ${dailyGoal - todayCount} corrida(s) para completar a meta.`}</small>
+        </div>
+        <div className="routine-card streak-card">
+          <span>Sequência atual</span>
+          <strong>{streak} {streak === 1 ? 'dia' : 'dias'}</strong>
+          <small>{streak > 0 ? 'Continue treinando para manter o rastro.' : 'Faça uma corrida hoje para começar uma sequência.'}</small>
+        </div>
+      </div>
+
+      <div className="week-card">
+        <div className="week-head">
+          <div><b>Últimos 7 dias</b><small>Quantidade de corridas por dia</small></div>
+          <span>{weekDays.reduce((sum, day) => sum + day.count, 0)} corridas</span>
+        </div>
+        <div className="week-days">
+          {weekDays.map(day => <div className={day.today ? 'week-day today' : 'week-day'} key={day.key}>
+            <div className={day.count ? 'week-dot active' : 'week-dot'}><strong>{day.count}</strong></div>
+            <span>{day.label}</span>
+          </div>)}
+        </div>
       </div>
 
       <div className="achievements">
