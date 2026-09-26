@@ -54,6 +54,24 @@ function Stat({ label, value, suffix = '' }) {
   return <div className="stat-card"><span>{label}</span><strong>{value}{suffix}</strong></div>
 }
 
+function MetricsHelp() {
+  return <div className="metrics-help">
+    <div className="metrics-help-title">
+      <span>?</span>
+      <div>
+        <b>O que significam essas medidas?</b>
+        <small>Deixei essa explicação aqui porque nem todo mundo conhece as siglas.</small>
+      </div>
+    </div>
+    <div className="metrics-help-grid">
+      <div><strong>PPM</strong><span>Palavras por minuto. É a velocidade aproximada da sua digitação.</span></div>
+      <div><strong>CPM</strong><span>Caracteres por minuto. Conta letras, espaços e outros caracteres digitados corretamente.</span></div>
+      <div><strong>Precisão</strong><span>Porcentagem do que você digitou corretamente durante a corrida.</span></div>
+      <div><strong>Erros</strong><span>Quantidade de caracteres digitados diferente do texto esperado.</span></div>
+    </div>
+  </div>
+}
+
 function AuthBox({ user, onClose }) {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -184,10 +202,15 @@ function Trainer({ user, onSaved }) {
       )}</div>
     </div>
     {!user && <div className="save-hint">Corra livremente. Entre na sua toca para salvar o rastro e acompanhar sua evolução.</div>}
+    <div className="dev-note">
+      <b>Nota do projeto:</b>
+      <span>Essa versão ainda está em desenvolvimento. Estou adicionando as funções por etapas e ajustando o que não ficar legal.</span>
+    </div>
     <div className="stats-row">
-      <Stat label="Tempo" value={timeLeft} suffix="s" /><Stat label="WPM" value={stats.wpm} />
+      <Stat label="Tempo" value={timeLeft} suffix="s" /><Stat label="PPM" value={stats.wpm} />
       <Stat label="CPM" value={stats.cpm} /><Stat label="Precisão" value={stats.accuracy} suffix="%" /><Stat label="Erros" value={stats.errors} />
     </div>
+    <MetricsHelp />
     <button className="typing-area" onClick={() => inputRef.current?.focus()} type="button">
       <CharacterText text={text} input={input} />
       <textarea ref={inputRef} className="hidden-input" value={input} onChange={handleChange}
@@ -199,7 +222,7 @@ function Trainer({ user, onSaved }) {
     </div>
     {finished && <div className="result-box">
       <p className="eyebrow">CHEGADA {user && saved ? '• RASTRO SALVO' : ''}</p>
-      <div className="result-main"><strong>{stats.wpm}</strong><span>WPM</span></div>
+      <div className="result-main"><strong>{stats.wpm}</strong><span>PPM</span></div>
       <p>{stats.accuracy >= 97 ? 'Ótima precisão. Agora tente aumentar o ritmo gradualmente.' : stats.accuracy >= 93 ? 'Bom equilíbrio. Tente reduzir os erros antes de acelerar.' : 'Priorize a precisão no próximo treino e diminua um pouco o ritmo.'}</p>
       <button className="primary-btn" onClick={() => reset()}>Correr novamente</button>
     </div>}
@@ -252,9 +275,9 @@ function Dashboard({ user, refreshKey }) {
 
   return <section className="dashboard-stack">
     <div className="panel">
-      <p className="eyebrow">PAINEL TURBO</p><h2>Seu desempenho na pista</h2>
+      <p className="eyebrow">PAINEL TURBO</p><h2>Seu desempenho na pista</h2><p className="muted small-copy">Aqui eu junto os dados dos seus últimos treinos para ficar mais fácil perceber a evolução.</p>
       <div className="stats-row dashboard-stats">
-        <Stat label="Treinos" value={count} /><Stat label="WPM médio" value={avgWpm} />
+        <Stat label="Treinos" value={count} /><Stat label="PPM médio" value={avgWpm} />
         <Stat label="Recorde" value={bestWpm} /><Stat label="Precisão média" value={avgAcc} suffix="%" />
       </div>
     </div>
@@ -262,7 +285,7 @@ function Dashboard({ user, refreshKey }) {
       <p className="eyebrow">RASTRO</p>
       {sessions.length === 0 ? <p className="muted">Finalize sua primeira corrida para começar o rastro.</p> :
         <div className="history-list">{sessions.map(s => <div className="history-row" key={s.id}>
-          <div><strong>{s.wpm} WPM</strong><span>{new Date(s.created_at).toLocaleString('pt-BR')}</span></div>
+          <div><strong>{s.wpm} PPM</strong><span>{new Date(s.created_at).toLocaleString('pt-BR')}</span></div>
           <div><b>{Number(s.accuracy).toFixed(1)}%</b><span>{s.errors} erros · {s.duration_seconds}s</span></div>
         </div>)}</div>
       }
@@ -297,7 +320,7 @@ export default function Home() {
       <section className="hero">
         <p className="eyebrow">A PISTA É O TECLADO</p>
         <h1>Menos caça ao teclado. Mais <em>turbo.</em></h1>
-        <p>Treine digitação, precisão e memória muscular enquanto deixa um rastro de evolução a cada corrida.</p>
+        <p>Criei o RatoTurbo para praticar digitação de um jeito mais simples e divertido. A ideia é ir melhorando o projeto enquanto ele também ajuda você a melhorar no teclado.</p>
       </section>
 
       <div className="tabs-mobile">
@@ -311,7 +334,10 @@ export default function Home() {
       {tab === 'aprender' && <Learn />}
       {tab === 'estatisticas' && <Dashboard user={user} refreshKey={refreshKey} />}
 
-      <footer>RatoTurbo · Digite rápido. Evolua a cada tecla.</footer>
+      <footer>
+        <span>RatoTurbo · projeto pessoal em desenvolvimento</span>
+        <small>Feito aos poucos, testando, errando e melhorando.</small>
+      </footer>
     </div>
     {authOpen && <AuthBox user={user} onClose={() => setAuthOpen(false)} />}
   </main>
