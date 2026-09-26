@@ -1026,3 +1026,87 @@ footer:before{display:none}
   .week-days{gap:4px}
   .week-dot{width:30px;height:30px}
 }
+
+/* Metas personalizadas */
+.goals-section{
+  margin-top:14px;
+  padding:16px;
+  border:1px solid rgba(70,167,255,.11);
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+.goals-head h3{
+  margin:0;
+  font-size:16px;
+}
+.goals-form{
+  display:grid;
+  grid-template-columns:repeat(3,1fr) auto;
+  gap:10px;
+  align-items:end;
+  margin-top:14px;
+}
+.goals-form label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  color:var(--muted);
+  font-size:11px;
+}
+.goals-form input{
+  height:40px;
+  width:100%;
+  padding:0 10px;
+  border:1px solid #244968;
+  border-radius:7px;
+  outline:none;
+  background:#06192b;
+  color:white;
+}
+.goals-form input:focus{
+  border-color:var(--orange);
+  box-shadow:0 0 0 2px rgba(255,122,0,.09);
+}
+.goals-form .secondary-btn{
+  height:40px;
+  white-space:nowrap;
+}
+.goal-message{
+  display:block;
+  margin-top:8px;
+  color:var(--yellow);
+  font-size:10px;
+}
+.goal-progress-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+  margin-top:12px;
+}
+.goal-progress-card{
+  padding:11px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;
+  background:#07192b;
+}
+.goal-progress-card>div:first-child{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.goal-progress-card span{
+  color:var(--muted);
+  font-size:10px;
+}
+.goal-progress-card strong{
+  color:var(--orange);
+  font-size:11px;
+}
+@media(max-width:900px){
+  .goals-form{grid-template-columns:repeat(2,1fr)}
+  .goal-progress-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .goals-form{grid-template-columns:1fr}
+}
