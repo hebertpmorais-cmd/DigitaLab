@@ -328,17 +328,39 @@ function Trainer({ user, onSaved, initialText }) {
   </section>
 }
 
-function Learn() {
+function Learn({ user }) {
   const [lesson, setLesson] = useState(0)
   const [practiceInput, setPracticeInput] = useState('')
   const [practiceAttempts, setPracticeAttempts] = useState(0)
   const [practiceErrors, setPracticeErrors] = useState(0)
+  const [learningProgress, setLearningProgress] = useState({})
+  const [progressMessage, setProgressMessage] = useState('')
 
   const practiceText = LESSONS[lesson].text
   const progress = Math.min(100, (practiceInput.length / practiceText.length) * 100)
   const practiceAccuracy = practiceAttempts
     ? Math.max(0, ((practiceAttempts - practiceErrors) / practiceAttempts) * 100).toFixed(1)
     : '100.0'
+
+  useEffect(() => {
+    if (!user) {
+      setLearningProgress({})
+      return
+    }
+
+    supabase.from('learning_progress')
+      .select('lesson_index, best_accuracy, completed, completed_at')
+      .order('lesson_index', { ascending: true })
+      .then(({ data }) => {
+        const mapped = {}
+        for (const item of data || []) mapped[item.lesson_index] = item
+        setLearningProgress(mapped)
+      })
+  }, [user])
+
+  const completedCount = LESSONS.filter((_, index) => learningProgress[index]?.completed).length
+  const courseProgress = Math.round((completedCount / LESSONS.length) * 100)
+  const nextLesson = LESSONS.findIndex((_, index) => !learningProgress[index]?.completed)
 
   const learnImages = [
     {
@@ -358,6 +380,30 @@ function Learn() {
     setPracticeInput('')
     setPracticeAttempts(0)
     setPracticeErrors(0)
+  }
+
+  async function saveLessonProgress() {
+    if (!user) return
+    const accuracy = Number(practiceAccuracy)
+    const previous = learningProgress[lesson]
+    const completed = practiceInput.length >= practiceText.length && accuracy >= 97
+    const bestAccuracy = Math.max(Number(previous?.best_accuracy || 0), accuracy)
+
+    const payload = {
+      user_id: user.id,
+      lesson_index: lesson,
+      best_accuracy: bestAccuracy,
+      completed: previous?.completed || completed,
+      completed_at: previous?.completed_at || (completed ? new Date().toISOString() : null),
+      updated_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase.from('learning_progress').upsert(payload)
+
+    if (!error) {
+      setLearningProgress(current => ({ ...current, [lesson]: payload }))
+      setProgressMessage(completed ? 'Aula concluída e progresso salvo.' : 'Resultado salvo. Tente chegar a 97% para concluir a aula.')
+    }
   }
 
   function handlePractice(e) {
@@ -388,11 +434,29 @@ function Learn() {
     setPracticeInput(value)
   }
 
+  useEffect(() => {
+    if (!user) return
+    if (practiceInput.length < practiceText.length || practiceAttempts === 0) return
+    saveLessonProgress()
+  }, [practiceInput.length, practiceText.length])
+
   return <section className="learn-stack">
     <div className="panel">
       <p className="eyebrow">POSICIONAMENTO DAS MÃOS</p>
       <h2>Primeiro entenda onde cada dedo deve ficar</h2>
       <p className="muted">Antes de tentar ganhar velocidade, vale criar o hábito de voltar sempre para a linha base e movimentar só o necessário.</p>
+
+      <div className="learning-path">
+        <div className="learning-path-head">
+          <div>
+            <span>Progresso da trilha</span>
+            <strong>{completedCount}/{LESSONS.length} aulas</strong>
+          </div>
+          <b>{courseProgress}%</b>
+        </div>
+        <div className="learning-path-track"><span style={{ width: `${courseProgress}%` }} /></div>
+        <small>{nextLesson === -1 ? 'Trilha inicial concluída.' : `Próxima recomendada: ${LESSONS[nextLesson].title}`}</small>
+      </div>
 
       <div className="learn-image-grid visual-guides">
         {learnImages.map(item => <div className="learn-image-card" key={item.title}>
@@ -419,11 +483,18 @@ function Learn() {
       <h2>Agora é sua vez</h2>
       <p className="muted small-copy">Veja os dois guias acima e depois pratique aqui. O foco é repetir o movimento certo até ele começar a ficar natural.</p>
 
-      <div className="lesson-list learn-lessons">{LESSONS.map((item,index) =>
-        <button onClick={() => changeLesson(index)} className={lesson === index ? 'lesson active' : 'lesson'} key={item.title}>
-          <span>{index+1}</span><div><b>{item.title}</b><small>{item.keys}</small></div>
+      <div className="lesson-list learn-lessons">{LESSONS.map((item,index) => {
+        const progressItem = learningProgress[index]
+        const classes = [lesson === index ? 'lesson active' : 'lesson', progressItem?.completed ? 'completed' : ''].join(' ')
+        return <button onClick={() => changeLesson(index)} className={classes} key={item.title}>
+          <span>{progressItem?.completed ? '✓' : index+1}</span>
+          <div>
+            <b>{item.title}</b>
+            <small>{item.keys}</small>
+            {progressItem && <em>Melhor precisão: {Number(progressItem.best_accuracy).toFixed(1)}%</em>}
+          </div>
         </button>
-      )}</div>
+      })}</div>
 
       <div className="practice-live-stats">
         <div><span>Precisão</span><strong>{practiceAccuracy}%</strong></div>
@@ -446,6 +517,8 @@ function Learn() {
       />
 
       <div className="practice-progress"><span style={{ width: `${progress}%` }} /></div>
+      {!user && <div className="practice-save-note">Entre na sua toca para salvar o progresso das aulas.</div>}
+      {progressMessage && <div className="practice-save-note success">{progressMessage}</div>}
 
       <div className="practice-actions">
         <p>{practiceInput.length >= practiceText.length ? 'Exercício concluído. Você pode repetir até o movimento ficar natural.' : 'Digite com calma e tente não olhar para o teclado.'}</p>
@@ -917,7 +990,7 @@ export default function Home() {
       </div>
 
       {tab === 'treinar' && <Trainer user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
-      {tab === 'aprender' && <Learn />}
+      {tab === 'aprender' && <Learn user={user} />}
       {tab === 'estatisticas' && <Dashboard user={user} refreshKey={refreshKey} />}
       {tab === 'caca' && <HuntMode user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
 
