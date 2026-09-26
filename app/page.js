@@ -442,6 +442,68 @@ function HuntMode({ user, onTrain }) {
   </section>
 }
 
+
+function PerformanceChart({ sessions, metric, goal, title, suffix = '' }) {
+  const data = sessions.slice(0, 12).reverse()
+  if (data.length < 2) {
+    return <div className="evolution-empty">Faça pelo menos 2 corridas para começar a ver a evolução.</div>
+  }
+
+  const values = data.map(item => metric === 'wpm' ? Number(item.wpm) : Number(item.accuracy))
+  const width = 600
+  const height = 180
+  const padX = 28
+  const padY = 24
+
+  const minValue = metric === 'accuracy'
+    ? Math.max(0, Math.min(...values, Number(goal)) - 5)
+    : 0
+  const maxValue = metric === 'accuracy'
+    ? 100
+    : Math.max(...values, Number(goal), 20)
+
+  const range = Math.max(1, maxValue - minValue)
+  const xFor = index => padX + (index * (width - padX * 2)) / Math.max(1, data.length - 1)
+  const yFor = value => height - padY - ((value - minValue) / range) * (height - padY * 2)
+  const points = values.map((value, index) => `${xFor(index)},${yFor(value)}`).join(' ')
+  const goalY = yFor(Number(goal))
+
+  const firstHalf = values.slice(0, Math.ceil(values.length / 2))
+  const lastHalf = values.slice(Math.floor(values.length / 2))
+  const avg = list => list.reduce((sum, value) => sum + value, 0) / Math.max(1, list.length)
+  const change = avg(lastHalf) - avg(firstHalf)
+
+  return <div className="evolution-card">
+    <div className="evolution-head">
+      <div>
+        <b>{title}</b>
+        <small>Últimas {data.length} corridas</small>
+      </div>
+      <span className={change > 0 ? 'trend up' : change < 0 ? 'trend down' : 'trend'}>
+        {change > 0 ? '+' : ''}{change.toFixed(metric === 'accuracy' ? 1 : 0)}{suffix}
+      </span>
+    </div>
+
+    <svg className="evolution-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={title}>
+      <line className="chart-grid" x1={padX} y1={height / 2} x2={width - padX} y2={height / 2} />
+      <line className="chart-goal" x1={padX} y1={goalY} x2={width - padX} y2={goalY} />
+      <polyline className={metric === 'wpm' ? 'chart-line ppm' : 'chart-line accuracy'} points={points} />
+      {values.map((value, index) => <circle
+        key={index}
+        className={value >= Number(goal) ? 'chart-point goal-hit' : 'chart-point'}
+        cx={xFor(index)}
+        cy={yFor(value)}
+        r="4"
+      />)}
+    </svg>
+
+    <div className="chart-footer">
+      <span>Meta: <b>{goal}{suffix}</b></span>
+      <span>Atual: <b>{values[values.length - 1]}{suffix}</b></span>
+    </div>
+  </div>
+}
+
 function Dashboard({ user, refreshKey }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(false)
@@ -657,6 +719,20 @@ function Dashboard({ user, refreshKey }) {
           <span>Sequência atual</span>
           <strong>{streak} {streak === 1 ? 'dia' : 'dias'}</strong>
           <small>{streak > 0 ? 'Continue treinando para manter o rastro.' : 'Faça uma corrida hoje para começar uma sequência.'}</small>
+        </div>
+      </div>
+
+      <div className="evolution-section">
+        <div className="evolution-title">
+          <div>
+            <p className="eyebrow">EVOLUÇÃO</p>
+            <h3>Como seus últimos treinos estão andando</h3>
+          </div>
+          <small>Gráficos simples, sem biblioteca externa.</small>
+        </div>
+        <div className="evolution-grid">
+          <PerformanceChart sessions={sessions} metric="wpm" goal={goals.ppm_goal} title="Velocidade" suffix=" PPM" />
+          <PerformanceChart sessions={sessions} metric="accuracy" goal={goals.accuracy_goal} title="Precisão" suffix="%" />
         </div>
       </div>
 
