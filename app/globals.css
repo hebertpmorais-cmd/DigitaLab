@@ -683,3 +683,119 @@ footer:before{display:none}
   }
   .metrics-help-grid{grid-template-columns:1fr}
 }
+
+/* Modo Caça */
+.hunt-stack{display:flex;flex-direction:column;gap:18px}
+.hunt-empty{min-height:220px}
+.hunt-summary{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin:22px 0 16px;
+}
+.hunt-main{
+  padding:18px;
+  border:1px solid rgba(255,255,255,.06);
+  border-left:3px solid var(--orange);
+  border-radius:10px;
+  background:linear-gradient(180deg,#0a2139,#081a2d);
+}
+.hunt-main:nth-child(2){border-left-color:var(--yellow)}
+.hunt-main span{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:8px;
+}
+.hunt-main strong{
+  display:block;
+  color:var(--orange);
+  font-size:34px;
+  line-height:1;
+  margin-bottom:7px;
+}
+.hunt-main strong.hunt-finger{
+  font-size:20px;
+  color:var(--yellow);
+}
+.hunt-main small{
+  color:#8fa3ba;
+  font-size:11px;
+}
+.hunt-keys{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:8px 0 18px;
+}
+.hunt-key{
+  display:grid;
+  grid-template-columns:auto auto 1fr;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  border:1px solid rgba(70,167,255,.12);
+  border-radius:9px;
+  background:#081b30;
+}
+.hunt-key>span{
+  color:#607891;
+  font-size:10px;
+  font-weight:900;
+}
+.hunt-key>strong{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:7px;
+  background:rgba(255,122,0,.13);
+  border:1px solid rgba(255,122,0,.32);
+  color:#ff9b42;
+  font-size:18px;
+}
+.hunt-key>div{display:flex;flex-direction:column;gap:2px}
+.hunt-key b{font-size:11px}
+.hunt-key small{color:var(--muted);font-size:10px}
+.hunt-start{
+  min-width:220px;
+}
+.hunt-how{padding-top:22px}
+.hunt-steps{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.hunt-steps>div{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  padding:12px;
+  background:rgba(255,255,255,.02);
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;
+}
+.hunt-steps span{
+  flex:0 0 24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  color:#071522;
+  background:var(--yellow);
+  font-size:11px;
+  font-weight:900;
+}
+.hunt-steps p{
+  margin:2px 0 0;
+  color:#b8c5d4;
+  font-size:12px;
+  line-height:1.45;
+}
+@media(max-width:900px){
+  .hunt-keys{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:700px){
+  .hunt-summary,.hunt-steps{grid-template-columns:1fr}
+  .hunt-keys{grid-template-columns:1fr}
+}
