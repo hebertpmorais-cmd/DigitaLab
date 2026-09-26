@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+<rect width="1200" height="675" rx="30" fill="#061525"/>
+<path d="M0 0h1200v8H0z" fill="#ff7a00"/>
+<text x="60" y="72" fill="#ffd23f" font-family="Arial,sans-serif" font-size="20" font-weight="700" letter-spacing="3">RATOTURBO • APRENDER</text>
+<text x="60" y="135" fill="#f8fafc" font-family="Arial,sans-serif" font-size="48" font-weight="800">Posição inicial das mãos</text>
+<text x="60" y="180" fill="#afbdd0" font-family="Arial,sans-serif" font-size="25">Descanse os dedos em A S D F e J K L Ç</text>
+
+<g transform="translate(105 250)">
+  <rect x="0" y="0" width="990" height="190" rx="24" fill="#0a2139" stroke="#214568" stroke-width="3"/>
+  <g font-family="Arial,sans-serif" font-size="28" font-weight="800" text-anchor="middle">
+    <g transform="translate(95 45)">
+      <rect width="82" height="82" rx="12" fill="#12365c" stroke="#46a7ff" stroke-width="3"/><text x="41" y="52" fill="#fff">A</text>
+    </g>
+    <g transform="translate(195 45)">
+      <rect width="82" height="82" rx="12" fill="#12365c" stroke="#46a7ff" stroke-width="3"/><text x="41" y="52" fill="#fff">S</text>
+    </g>
+    <g transform="translate(295 45)">
+      <rect width="82" height="82" rx="12" fill="#12365c" stroke="#46a7ff" stroke-width="3"/><text x="41" y="52" fill="#fff">D</text>
+    </g>
+    <g transform="translate(395 45)">
+      <rect width="82" height="82" rx="12" fill="#ff7a00" stroke="#ffd23f" stroke-width="5"/><text x="41" y="52" fill="#061525">F</text>
+    </g>
+    <g transform="translate(515 45)">
+      <rect width="82" height="82" rx="12" fill="#ff7a00" stroke="#ffd23f" stroke-width="5"/><text x="41" y="52" fill="#061525">J</text>
+    </g>
+    <g transform="translate(615 45)">
+      <rect width="82" height="82" rx="12" fill="#12365c" stroke="#46a7ff" stroke-width="3"/><text x="41" y="52" fill="#fff">K</text>
+    </g>
+    <g transform="translate(715 45)">
+      <rect width="82" height="82" rx="12" fill="#12365c" stroke="#46a7ff" stroke-width="3"/><text x="41" y="52" fill="#fff">L</text>
+    </g>
+    <g transform="translate(815 45)">
+      <rect width="82" height="82" rx="12" fill="#12365c" stroke="#46a7ff" stroke-width="3"/><text x="41" y="52" fill="#fff">Ç</text>
+    </g>
+  </g>
+</g>
+
+<g stroke-linecap="round" fill="none">
+  <path d="M270 535 C255 500 258 470 275 445" stroke="#46a7ff" stroke-width="22"/>
+  <path d="M355 535 C342 495 350 463 365 442" stroke="#46a7ff" stroke-width="22"/>
+  <path d="M440 535 C432 492 443 459 455 438" stroke="#46a7ff" stroke-width="22"/>
+  <path d="M525 535 C525 490 530 455 541 430" stroke="#ff7a00" stroke-width="22"/>
+  <path d="M675 535 C675 490 670 455 659 430" stroke="#ff7a00" stroke-width="22"/>
+  <path d="M760 535 C768 492 757 459 745 438" stroke="#46a7ff" stroke-width="22"/>
+  <path d="M845 535 C858 495 850 463 835 442" stroke="#46a7ff" stroke-width="22"/>
+  <path d="M930 535 C945 500 942 470 925 445" stroke="#46a7ff" stroke-width="22"/>
+</g>
+
+<rect x="410" y="565" width="380" height="62" rx="18" fill="#081b30" stroke="#ff7a00" stroke-width="2"/>
+<text x="600" y="591" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="18" font-weight="700">F e J são suas referências</text>
+<text x="600" y="616" text-anchor="middle" fill="#ffd23f" font-family="Arial,sans-serif" font-size="15">Use as saliências para voltar à linha base sem olhar</text>
+</svg>
