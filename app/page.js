@@ -27,6 +27,52 @@ const HAND_GROUPS = [
 
 const randomText = () => TEXTS[Math.floor(Math.random() * TEXTS.length)]
 
+const FINGER_MAP = {
+  q:'Mindinho E', a:'Mindinho E', z:'Mindinho E',
+  w:'Anelar E', s:'Anelar E', x:'Anelar E',
+  e:'Médio E', d:'Médio E', c:'Médio E',
+  r:'Indicador E', f:'Indicador E', v:'Indicador E', t:'Indicador E', g:'Indicador E', b:'Indicador E',
+  y:'Indicador D', h:'Indicador D', n:'Indicador D', u:'Indicador D', j:'Indicador D', m:'Indicador D',
+  i:'Médio D', k:'Médio D', ',':'Médio D',
+  o:'Anelar D', l:'Anelar D', '.':'Anelar D',
+  p:'Mindinho D', 'ç':'Mindinho D', ';':'Mindinho D', '/':'Mindinho D'
+}
+
+const HUNT_WORDS = [
+  'rato','turbo','teclado','velocidade','ritmo','prática','precisão','corrida',
+  'dedos','texto','tempo','controle','memória','digitação','trabalho','estudo',
+  'foco','melhorar','palavra','rápido','linha','base','toque','movimento',
+  'resultado','treino','erro','acerto','pista','técnica','natural','olhos'
+]
+
+function normalizeKey(char) {
+  return char?.toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '') || ''
+}
+
+function fingerForKey(char) {
+  const raw = char?.toLocaleLowerCase('pt-BR') || ''
+  return FINGER_MAP[raw] || FINGER_MAP[normalizeKey(raw)] || 'Outro'
+}
+
+function buildHuntText(keys) {
+  const normalized = keys.map(k => normalizeKey(k)).filter(Boolean)
+  if (!normalized.length) return TEXTS[0]
+  const scored = HUNT_WORDS
+    .map(word => ({
+      word,
+      score: normalized.reduce((total, key) => total + [...normalizeKey(word)].filter(c => c === key).length, 0)
+    }))
+    .filter(item => item.score > 0)
+    .sort((a,b) => b.score - a.score)
+    .slice(0,12)
+    .map(item => item.word)
+
+  const warmup = normalized.flatMap(key => [key,key,key]).join(' ')
+  const pairs = normalized.flatMap((key,i) => normalized.filter((_,j) => j !== i).map(other => key + other)).slice(0,12).join(' ')
+  const words = scored.length ? scored.join(' ') : normalized.join(' ')
+  return `${warmup} ${pairs} ${words} ${words}`.trim()
+}
+
 function calcStats(input, text, secondsElapsed) {
   const typed = input.length
   let correct = 0
@@ -127,9 +173,9 @@ function AuthBox({ user, onClose }) {
   </div>
 }
 
-function Trainer({ user, onSaved }) {
+function Trainer({ user, onSaved, initialText }) {
   const [duration, setDuration] = useState(30)
-  const [text, setText] = useState(TEXTS[0])
+  const [text, setText] = useState(initialText || TEXTS[0])
   const [input, setInput] = useState('')
   const [timeLeft, setTimeLeft] = useState(30)
   const [started, setStarted] = useState(false)
@@ -138,6 +184,17 @@ function Trainer({ user, onSaved }) {
   const inputRef = useRef(null)
   const elapsed = duration - timeLeft
   const stats = useMemo(() => calcStats(input, text, elapsed), [input, text, elapsed])
+
+  useEffect(() => {
+    if (initialText) {
+      setText(initialText)
+      setInput('')
+      setTimeLeft(duration)
+      setStarted(false)
+      setFinished(false)
+      setSaved(false)
+    }
+  }, [initialText])
 
   useEffect(() => {
     if (!started || finished) return
@@ -254,6 +311,95 @@ function Learn() {
   </section>
 }
 
+
+function HuntMode({ user, onTrain }) {
+  const [errors, setErrors] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!user) { setErrors([]); return }
+    setLoading(true)
+    supabase.from('typing_errors')
+      .select('expected_char, created_at')
+      .order('created_at', { ascending: false })
+      .limit(300)
+      .then(({ data }) => {
+        const counts = {}
+        for (const item of data || []) {
+          const key = item.expected_char?.toLocaleLowerCase('pt-BR')
+          if (!key || key === ' ') continue
+          counts[key] = (counts[key] || 0) + 1
+        }
+        const ranked = Object.entries(counts)
+          .map(([key,count]) => ({ key, count, finger: fingerForKey(key) }))
+          .sort((a,b) => b.count - a.count)
+        setErrors(ranked)
+        setLoading(false)
+      })
+  }, [user])
+
+  if (!user) return <section className="panel hunt-empty">
+    <p className="eyebrow">MODO CAÇA</p>
+    <h2>Primeiro preciso conhecer seus erros</h2>
+    <p className="muted">Entre na sua toca e faça algumas corridas. O RatoTurbo vai usar esses resultados para descobrir quais teclas precisam de mais treino.</p>
+  </section>
+
+  if (loading) return <section className="panel"><p className="muted">Analisando seu rastro...</p></section>
+
+  if (!errors.length) return <section className="panel hunt-empty">
+    <p className="eyebrow">MODO CAÇA</p>
+    <h2>Ainda não encontrei uma tecla problemática</h2>
+    <p className="muted">Faça algumas corridas normalmente. Quando houver erros salvos, eles aparecem aqui.</p>
+  </section>
+
+  const topKeys = errors.slice(0,4)
+  const fingerCounts = {}
+  errors.forEach(item => { fingerCounts[item.finger] = (fingerCounts[item.finger] || 0) + item.count })
+  const topFinger = Object.entries(fingerCounts).sort((a,b) => b[1] - a[1])[0]
+
+  return <section className="hunt-stack">
+    <div className="panel">
+      <p className="eyebrow">MODO CAÇA</p>
+      <h2>Encontrei onde você mais tropeça</h2>
+      <p className="muted small-copy">Usei seus erros mais recentes para montar esse diagnóstico. Quanto mais você treinar, mais útil ele fica.</p>
+
+      <div className="hunt-summary">
+        <div className="hunt-main">
+          <span>Tecla que mais escapou</span>
+          <strong>{topKeys[0].key === ' ' ? 'Espaço' : topKeys[0].key.toUpperCase()}</strong>
+          <small>{topKeys[0].count} erros encontrados</small>
+        </div>
+        <div className="hunt-main">
+          <span>Dedo que mais precisa de treino</span>
+          <strong className="hunt-finger">{topFinger?.[0]}</strong>
+          <small>{topFinger?.[1]} erros ligados a esse dedo</small>
+        </div>
+      </div>
+
+      <div className="hunt-keys">
+        {topKeys.map((item,index) => <div className="hunt-key" key={item.key}>
+          <span>#{index + 1}</span>
+          <strong>{item.key.toUpperCase()}</strong>
+          <div><b>{item.count} erros</b><small>{item.finger}</small></div>
+        </div>)}
+      </div>
+
+      <button className="primary-btn hunt-start" onClick={() => onTrain(buildHuntText(topKeys.map(item => item.key)))}>
+        Treinar essas teclas
+      </button>
+    </div>
+
+    <div className="panel hunt-how">
+      <p className="eyebrow">COMO FUNCIONA</p>
+      <div className="hunt-steps">
+        <div><span>1</span><p>Você faz corridas normalmente.</p></div>
+        <div><span>2</span><p>Eu salvo as teclas que saíram erradas.</p></div>
+        <div><span>3</span><p>O Modo Caça encontra os padrões e monta um treino focado.</p></div>
+      </div>
+    </div>
+  </section>
+}
+
 function Dashboard({ user, refreshKey }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(false)
@@ -298,6 +444,7 @@ export default function Home() {
   const [user, setUser] = useState(null)
   const [authOpen, setAuthOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [huntText, setHuntText] = useState('')
 
   useEffect(() => {
     supabase?.auth.getUser().then(({ data }) => setUser(data.user || null))
@@ -312,6 +459,7 @@ export default function Home() {
         <button className={tab === 'treinar' ? 'nav-active' : ''} onClick={() => setTab('treinar')}>Corrida</button>
         <button className={tab === 'aprender' ? 'nav-active' : ''} onClick={() => setTab('aprender')}>Aprender</button>
         <button className={tab === 'estatisticas' ? 'nav-active' : ''} onClick={() => setTab('estatisticas')}>Desempenho</button>
+        <button className={tab === 'caca' ? 'nav-active' : ''} onClick={() => setTab('caca')}>Modo Caça</button>
         <button className="account-btn" onClick={() => setAuthOpen(true)}>{user ? 'Minha toca' : 'Entrar'}</button>
       </nav>
     </header>
@@ -327,12 +475,14 @@ export default function Home() {
         <button className={tab === 'treinar' ? 'active' : ''} onClick={() => setTab('treinar')}>Corrida</button>
         <button className={tab === 'aprender' ? 'active' : ''} onClick={() => setTab('aprender')}>Aprender</button>
         <button className={tab === 'estatisticas' ? 'active' : ''} onClick={() => setTab('estatisticas')}>Rastro</button>
+        <button className={tab === 'caca' ? 'active' : ''} onClick={() => setTab('caca')}>Caça</button>
         <button onClick={() => setAuthOpen(true)}>{user ? 'Toca' : 'Entrar'}</button>
       </div>
 
-      {tab === 'treinar' && <Trainer user={user} onSaved={() => setRefreshKey(k => k+1)} />}
+      {tab === 'treinar' && <Trainer user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
       {tab === 'aprender' && <Learn />}
       {tab === 'estatisticas' && <Dashboard user={user} refreshKey={refreshKey} />}
+      {tab === 'caca' && <HuntMode user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
 
       <footer>
         <span>RatoTurbo · projeto pessoal em desenvolvimento</span>
