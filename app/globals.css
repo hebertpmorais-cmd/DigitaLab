@@ -1407,3 +1407,36 @@ footer:before{display:none}
     flex-direction:column;
   }
 }
+
+/* Guias visuais próprios do Aprender */
+.learn-image-grid.visual-guides{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.visual-guides .learn-image-card{
+  position:relative;
+  border-color:rgba(70,167,255,.13);
+}
+.visual-guides .learn-image-card:after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:72px;
+  height:3px;
+  background:linear-gradient(90deg,var(--orange),var(--yellow));
+}
+.visual-guides .learn-image-card img{
+  aspect-ratio:16/9;
+  object-fit:contain;
+  padding:0;
+}
+.visual-guides .learn-image-card:hover{
+  border-color:rgba(255,122,0,.32);
+  transform:translateY(-2px);
+}
+.visual-guides .learn-image-card{
+  transition:transform .18s ease,border-color .18s ease;
+}
+@media(max-width:900px){
+  .learn-image-grid.visual-guides{grid-template-columns:1fr}
+}
