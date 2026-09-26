@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root{
-  --bg:#081a33;
-  --bg-soft:#0d2748;
-  --panel:#102b50;
-  --panel-2:#163a68;
-  --panel-3:#0d223f;
-  --line:#2a4f7c;
+  --bg:#061525;
+  --bg-soft:#0a2139;
+  --panel:#0c2744;
+  --panel-2:#12365c;
+  --panel-3:#091d33;
+  --line:#214568;
   --text:#f8fafc;
-  --muted:#b8c4d9;
-  --blue:#2563eb;
-  --blue-light:#60a5fa;
+  --muted:#afbdd0;
+  --blue:#1f8fff;
+  --blue-light:#46a7ff;
   --red:#e63946;
   --red-soft:#f87171;
-  --orange:#f97316;
-  --orange-dark:#ea580c;
-  --yellow:#facc15;
+  --orange:#ff7a00;
+  --orange-dark:#e96800;
+  --yellow:#ffd23f;
   --success:#facc15;
   --danger:#e63946;
   --accent:#f97316;
@@ -251,4 +251,261 @@ footer{padding:34px 0 42px;text-align:center;color:#7185a2;font-size:12px}
 }
 @media(max-width:800px){
   .brand:after,.hero:after{display:none}
+}
+
+/* RatoTurbo Racing Tech v2 */
+body{
+  background:
+    radial-gradient(circle at 10% -5%,rgba(31,143,255,.16) 0,transparent 28%),
+    radial-gradient(circle at 92% 8%,rgba(255,122,0,.12) 0,transparent 24%),
+    linear-gradient(180deg,#061525 0%,#071a2e 56%,#061525 100%);
+}
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.16;
+  background-image:linear-gradient(115deg,transparent 0 46%,rgba(70,167,255,.16) 46% 46.4%,transparent 46.4% 100%);
+  background-size:96px 96px;
+}
+.topbar{
+  background:rgba(6,21,37,.91);
+  border-bottom:1px solid rgba(70,167,255,.15);
+}
+.topbar:after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-1px;
+  height:2px;
+  background:linear-gradient(90deg,transparent 0 7%,var(--orange) 18%,var(--yellow) 25%,transparent 38%);
+  opacity:.75;
+}
+.brand{
+  position:relative;
+  text-transform:none;
+}
+.brand strong{font-size:21px;letter-spacing:-.045em}
+.brand em{
+  font-size:21px;
+  transform:skewX(-12deg);
+  display:inline-block;
+  color:var(--orange);
+  text-shadow:10px 0 22px rgba(255,122,0,.18);
+}
+.brand .rat-mark{
+  width:44px;
+  height:34px;
+  border-radius:55% 60% 48% 52%;
+  background:linear-gradient(135deg,var(--yellow) 0 20%,var(--orange) 21% 72%,#ff5a1f 73%);
+  box-shadow:0 0 0 2px rgba(255,210,63,.08),0 8px 25px rgba(255,122,0,.25);
+  transform:skewX(-8deg);
+  overflow:visible;
+}
+.brand .rat-mark:before,.brand .rat-mark:after{
+  width:13px;height:13px;top:-6px;border:3px solid #061525;background:#ff8b1f;
+}
+.brand .rat-mark:before{left:4px}
+.brand .rat-mark:after{right:5px}
+.brand:after{
+  width:28px;
+  margin-left:-10px;
+  border-top:3px solid var(--yellow);
+  transform:rotate(10deg) skewX(-20deg);
+  filter:drop-shadow(8px 0 0 rgba(255,122,0,.42));
+}
+nav button{position:relative}
+nav .nav-active:after{
+  content:"";
+  position:absolute;
+  left:12px;right:12px;bottom:3px;
+  height:2px;
+  background:var(--orange);
+  transform:skewX(-28deg);
+}
+.account-btn{
+  clip-path:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%);
+  border-radius:6px!important;
+  box-shadow:0 8px 24px rgba(255,122,0,.18);
+}
+.hero{
+  padding-top:76px;
+  padding-bottom:40px;
+}
+.hero:before{
+  content:"";
+  position:absolute;
+  left:-38px;
+  top:76px;
+  width:18px;
+  height:98px;
+  background:linear-gradient(180deg,var(--yellow),var(--orange));
+  clip-path:polygon(0 0,100% 0,55% 100%,0 100%);
+  opacity:.9;
+}
+.hero .eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  color:var(--yellow);
+}
+.hero .eyebrow:before{
+  content:"";
+  width:30px;
+  height:3px;
+  background:var(--orange);
+  transform:skewX(-28deg);
+  box-shadow:10px 0 0 rgba(255,210,63,.55);
+}
+.hero h1{
+  max-width:920px;
+  text-transform:none;
+}
+.hero h1 em{
+  display:inline-block;
+  transform:skewX(-8deg);
+  color:var(--orange);
+  text-shadow:14px 7px 0 rgba(255,122,0,.045),0 0 30px rgba(255,122,0,.14);
+}
+.panel{
+  position:relative;
+  border-radius:18px;
+  background:
+    linear-gradient(180deg,rgba(12,39,68,.98),rgba(7,27,48,.99));
+  border-color:rgba(70,167,255,.16);
+  box-shadow:0 26px 70px rgba(0,0,0,.22);
+}
+.panel:after{
+  content:"";
+  position:absolute;
+  top:0;right:32px;
+  width:66px;height:3px;
+  background:linear-gradient(90deg,var(--orange),var(--yellow));
+  transform:skewX(-30deg);
+  opacity:.9;
+}
+.trainer-panel:after{display:none}
+.panel-head .eyebrow{
+  color:var(--orange);
+}
+.chip{
+  border-radius:7px;
+  transform:skewX(-8deg);
+}
+.chip.active{
+  background:linear-gradient(135deg,var(--orange),#ff941f);
+  box-shadow:0 7px 20px rgba(255,122,0,.19);
+}
+.stat-card{
+  border-radius:10px;
+  background:linear-gradient(180deg,#0a2139,#081a2d);
+}
+.stat-card:after{
+  content:"";
+  position:absolute;
+  right:-8px;bottom:-16px;
+  width:38px;height:38px;
+  border:7px solid rgba(255,255,255,.025);
+  transform:rotate(35deg);
+}
+.typing-area{
+  background:
+    linear-gradient(90deg,rgba(255,122,0,.03),transparent 14%),
+    #051626;
+  border-radius:12px;
+  border-color:#183b59;
+}
+.typing-area:before{
+  content:"PISTA";
+  position:absolute;
+  right:18px;
+  top:13px;
+  font-size:9px;
+  letter-spacing:.23em;
+  font-weight:900;
+  color:rgba(70,167,255,.28);
+}
+.char.current{
+  background:var(--yellow);
+  color:#071522;
+  border-radius:2px;
+  box-shadow:5px 0 0 rgba(255,122,0,.16);
+}
+.primary-btn{
+  border-radius:7px;
+  clip-path:polygon(9px 0,100% 0,calc(100% - 9px) 100%,0 100%);
+  background:linear-gradient(135deg,var(--orange),#ff941f);
+}
+.secondary-btn{
+  border-radius:7px;
+}
+.result-box{
+  border-radius:12px;
+  border-left:4px solid var(--orange);
+}
+.result-box:after{
+  content:"⚡";
+  color:var(--yellow);
+}
+.key{
+  border-radius:8px;
+}
+.key.anchor{
+  border-color:var(--orange);
+  box-shadow:inset 0 -3px 0 var(--orange),0 0 20px rgba(255,122,0,.08);
+}
+.tip-box{
+  border-left-color:var(--yellow);
+  color:#f4dfa0;
+}
+.lesson,.practice-box,.finger-card{border-radius:9px}
+.lesson.active{
+  border-color:rgba(255,122,0,.68);
+  background:linear-gradient(90deg,rgba(255,122,0,.13),rgba(255,210,63,.035));
+}
+.auth-overlay{
+  background:rgba(2,9,18,.82);
+}
+.auth-card{
+  border-radius:16px;
+  border-color:rgba(70,167,255,.2);
+  background:
+    linear-gradient(115deg,rgba(255,122,0,.045),transparent 24%),
+    linear-gradient(180deg,#0c2948,#081d34);
+}
+.auth-card:before{
+  left:28px;
+  width:120px;
+  background:linear-gradient(90deg,var(--orange),var(--yellow),transparent);
+}
+.auth-card h2{letter-spacing:-.035em}
+.auth-form input{
+  border-radius:8px;
+  background:#06192b;
+}
+.auth-switch{border-radius:8px}
+.history-row{
+  border-radius:8px;
+  border-left:3px solid rgba(255,122,0,.55);
+}
+footer{
+  position:relative;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:700;
+  font-size:10px;
+}
+footer:before{
+  content:"";
+  display:inline-block;
+  width:26px;height:2px;
+  margin:0 10px 3px 0;
+  background:var(--orange);
+  box-shadow:9px 0 0 var(--yellow);
+}
+@media(max-width:800px){
+  .hero:before{display:none}
+  .panel{border-radius:14px}
+  .account-btn{clip-path:none}
 }
