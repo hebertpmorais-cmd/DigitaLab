@@ -897,3 +897,132 @@ footer:before{display:none}
 @media(max-width:700px){
   .achievement-grid{grid-template-columns:1fr}
 }
+
+/* Rotina, sequência e atividade semanal */
+.routine-grid{
+  display:grid;
+  grid-template-columns:1.3fr .7fr;
+  gap:10px;
+  margin-top:12px;
+}
+.routine-card{
+  padding:14px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;
+  background:#081b30;
+}
+.routine-title{
+  display:flex;
+  align-items:end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.routine-title span,.streak-card>span{
+  color:var(--muted);
+  font-size:11px;
+}
+.routine-title strong{
+  color:var(--orange);
+  font-size:16px;
+}
+.routine-track{
+  height:8px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#051522;
+  border:1px solid rgba(255,255,255,.05);
+}
+.routine-track span{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--orange),var(--yellow));
+}
+.routine-card small{
+  display:block;
+  margin-top:8px;
+  color:#71859b;
+  font-size:10px;
+  line-height:1.35;
+}
+.streak-card{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.streak-card>strong{
+  margin-top:3px;
+  font-size:25px;
+  color:var(--yellow);
+}
+.week-card{
+  margin-top:10px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;
+  background:rgba(255,255,255,.018);
+}
+.week-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+}
+.week-head>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.week-head b{font-size:12px}
+.week-head small{color:var(--muted);font-size:10px}
+.week-head>span{
+  color:var(--orange);
+  font-size:11px;
+  font-weight:800;
+}
+.week-days{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:8px;
+  margin-top:14px;
+}
+.week-day{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+.week-day>span{
+  color:#748aa1;
+  font-size:9px;
+  text-transform:uppercase;
+}
+.week-day.today>span{
+  color:var(--yellow);
+  font-weight:800;
+}
+.week-dot{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.06);
+  background:#071727;
+  color:#62768d;
+}
+.week-dot.active{
+  background:rgba(255,122,0,.12);
+  border-color:rgba(255,122,0,.3);
+  color:#ff9b42;
+}
+.week-dot strong{font-size:11px}
+.week-day.today .week-dot{
+  box-shadow:0 0 0 2px rgba(255,210,63,.09);
+}
+@media(max-width:700px){
+  .routine-grid{grid-template-columns:1fr}
+  .week-days{gap:4px}
+  .week-dot{width:30px;height:30px}
+}
