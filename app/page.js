@@ -93,8 +93,8 @@ function AuthBox({ user, onClose }) {
         <p className="muted">{user.email}</p>
         <button className="primary-btn" onClick={logout}>Sair da conta</button>
       </> : <>
-        <p className="eyebrow">{mode === 'login' ? 'ENTRAR' : 'CRIAR CONTA'}</p>
-        <h2>{mode === 'login' ? 'Continue sua evolução' : 'Salve seus treinos'}</h2>
+        <p className="eyebrow">{mode === 'login' ? 'ENTRAR NA TOCA' : 'CRIAR SUA TOCA'}</p>
+        <h2>{mode === 'login' ? 'Volte para a pista' : 'Guarde seu rastro'}</h2>
         <form className="auth-form" onSubmit={submit}>
           <label>E-mail<input type="email" required value={email} onChange={e => setEmail(e.target.value)} /></label>
           <label>Senha<input type="password" minLength="6" required value={password} onChange={e => setPassword(e.target.value)} /></label>
@@ -102,7 +102,7 @@ function AuthBox({ user, onClose }) {
           <button className="primary-btn" disabled={busy}>{busy ? 'Processando...' : mode === 'login' ? 'Entrar' : 'Criar conta'}</button>
         </form>
         <button className="auth-switch" onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setMessage('') }}>
-          {mode === 'login' ? 'Ainda não tenho conta' : 'Já tenho uma conta'}
+          {mode === 'login' ? 'Quero criar minha toca' : 'Já tenho uma toca'}
         </button>
       </>}
     </div>
@@ -178,12 +178,12 @@ function Trainer({ user, onSaved }) {
 
   return <section className="panel trainer-panel">
     <div className="panel-head">
-      <div><p className="eyebrow">TREINO RÁPIDO</p><h2>Digite com precisão. A velocidade vem depois.</h2></div>
+      <div><p className="eyebrow">PISTA DE DIGITAÇÃO</p><h2>Aqueça os dedos. Solte o turbo.</h2></div>
       <div className="duration-group">{[15,30,60].map(sec =>
         <button key={sec} className={duration === sec ? 'chip active' : 'chip'} onClick={() => reset(sec)}>{sec}s</button>
       )}</div>
     </div>
-    {!user && <div className="save-hint">Treine livremente. Entre na sua conta para salvar resultados e acompanhar a evolução.</div>}
+    {!user && <div className="save-hint">Corra livremente. Entre na sua toca para salvar o rastro e acompanhar sua evolução.</div>}
     <div className="stats-row">
       <Stat label="Tempo" value={timeLeft} suffix="s" /><Stat label="WPM" value={stats.wpm} />
       <Stat label="CPM" value={stats.cpm} /><Stat label="Precisão" value={stats.accuracy} suffix="%" /><Stat label="Erros" value={stats.errors} />
@@ -194,14 +194,14 @@ function Trainer({ user, onSaved }) {
         onPaste={e => e.preventDefault()} autoFocus spellCheck={false} aria-label="Campo de digitação" />
     </button>
     <div className="trainer-footer">
-      <p>{started ? 'Treino em andamento — mantenha os olhos na tela.' : finished ? 'Treino finalizado.' : 'Comece digitando para iniciar o cronômetro.'}</p>
-      <button className="secondary-btn" onClick={() => reset()}>Novo texto</button>
+      <p>{started ? 'Turbo ligado — mantenha os olhos na tela.' : finished ? 'Corrida finalizada.' : 'Comece a digitar para largar.'}</p>
+      <button className="secondary-btn" onClick={() => reset()}>Nova corrida</button>
     </div>
     {finished && <div className="result-box">
-      <p className="eyebrow">RESULTADO {user && saved ? '• SALVO' : ''}</p>
+      <p className="eyebrow">CHEGADA {user && saved ? '• RASTRO SALVO' : ''}</p>
       <div className="result-main"><strong>{stats.wpm}</strong><span>WPM</span></div>
       <p>{stats.accuracy >= 97 ? 'Ótima precisão. Agora tente aumentar o ritmo gradualmente.' : stats.accuracy >= 93 ? 'Bom equilíbrio. Tente reduzir os erros antes de acelerar.' : 'Priorize a precisão no próximo treino e diminua um pouco o ritmo.'}</p>
-      <button className="primary-btn" onClick={() => reset()}>Treinar novamente</button>
+      <button className="primary-btn" onClick={() => reset()}>Correr novamente</button>
     </div>}
   </section>
 }
@@ -252,15 +252,15 @@ function Dashboard({ user, refreshKey }) {
 
   return <section className="dashboard-stack">
     <div className="panel">
-      <p className="eyebrow">MEU DESEMPENHO</p><h2>Resumo dos últimos treinos</h2>
+      <p className="eyebrow">PAINEL TURBO</p><h2>Seu desempenho na pista</h2>
       <div className="stats-row dashboard-stats">
         <Stat label="Treinos" value={count} /><Stat label="WPM médio" value={avgWpm} />
         <Stat label="Recorde" value={bestWpm} /><Stat label="Precisão média" value={avgAcc} suffix="%" />
       </div>
     </div>
     <div className="panel">
-      <p className="eyebrow">HISTÓRICO</p>
-      {sessions.length === 0 ? <p className="muted">Finalize seu primeiro treino para começar o histórico.</p> :
+      <p className="eyebrow">RASTRO</p>
+      {sessions.length === 0 ? <p className="muted">Finalize sua primeira corrida para começar o rastro.</p> :
         <div className="history-list">{sessions.map(s => <div className="history-row" key={s.id}>
           <div><strong>{s.wpm} WPM</strong><span>{new Date(s.created_at).toLocaleString('pt-BR')}</span></div>
           <div><b>{Number(s.accuracy).toFixed(1)}%</b><span>{s.errors} erros · {s.duration_seconds}s</span></div>
@@ -284,34 +284,34 @@ export default function Home() {
 
   return <main>
     <header className="topbar">
-      <button className="brand" onClick={() => setTab('treinar')}><span>D</span>DigitaLab</button>
+      <button className="brand" onClick={() => setTab('treinar')}><span className="rat-mark">R</span><strong>Rato</strong><em>Turbo</em></button>
       <nav>
-        <button className={tab === 'treinar' ? 'nav-active' : ''} onClick={() => setTab('treinar')}>Treinar</button>
+        <button className={tab === 'treinar' ? 'nav-active' : ''} onClick={() => setTab('treinar')}>Corrida</button>
         <button className={tab === 'aprender' ? 'nav-active' : ''} onClick={() => setTab('aprender')}>Aprender</button>
-        <button className={tab === 'estatisticas' ? 'nav-active' : ''} onClick={() => setTab('estatisticas')}>Estatísticas</button>
-        <button className="account-btn" onClick={() => setAuthOpen(true)}>{user ? 'Minha conta' : 'Entrar'}</button>
+        <button className={tab === 'estatisticas' ? 'nav-active' : ''} onClick={() => setTab('estatisticas')}>Desempenho</button>
+        <button className="account-btn" onClick={() => setAuthOpen(true)}>{user ? 'Minha toca' : 'Entrar'}</button>
       </nav>
     </header>
 
     <div className="shell">
       <section className="hero">
-        <p className="eyebrow">DIGITAÇÃO MAIS RÁPIDA, SEM ATALHOS</p>
-        <h1>Treine velocidade, precisão e <em>técnica.</em></h1>
-        <p>Uma plataforma em português para desenvolver memória muscular, reduzir erros e acompanhar sua evolução.</p>
+        <p className="eyebrow">A PISTA É O TECLADO</p>
+        <h1>Menos caça ao teclado. Mais <em>turbo.</em></h1>
+        <p>Treine digitação, precisão e memória muscular enquanto deixa um rastro de evolução a cada corrida.</p>
       </section>
 
       <div className="tabs-mobile">
-        <button className={tab === 'treinar' ? 'active' : ''} onClick={() => setTab('treinar')}>Treinar</button>
+        <button className={tab === 'treinar' ? 'active' : ''} onClick={() => setTab('treinar')}>Corrida</button>
         <button className={tab === 'aprender' ? 'active' : ''} onClick={() => setTab('aprender')}>Aprender</button>
-        <button className={tab === 'estatisticas' ? 'active' : ''} onClick={() => setTab('estatisticas')}>Dados</button>
-        <button onClick={() => setAuthOpen(true)}>{user ? 'Conta' : 'Entrar'}</button>
+        <button className={tab === 'estatisticas' ? 'active' : ''} onClick={() => setTab('estatisticas')}>Rastro</button>
+        <button onClick={() => setAuthOpen(true)}>{user ? 'Toca' : 'Entrar'}</button>
       </div>
 
       {tab === 'treinar' && <Trainer user={user} onSaved={() => setRefreshKey(k => k+1)} />}
       {tab === 'aprender' && <Learn />}
       {tab === 'estatisticas' && <Dashboard user={user} refreshKey={refreshKey} />}
 
-      <footer>DigitaLab · Histórico e estatísticas sincronizados com Supabase.</footer>
+      <footer>RatoTurbo · Digite rápido. Evolua a cada tecla.</footer>
     </div>
     {authOpen && <AuthBox user={user} onClose={() => setAuthOpen(false)} />}
   </main>
