@@ -799,3 +799,101 @@ footer:before{display:none}
   .hunt-summary,.hunt-steps{grid-template-columns:1fr}
   .hunt-keys{grid-template-columns:1fr}
 }
+
+/* Gamificação inicial */
+.progress-card{
+  margin-top:20px;
+  padding:16px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  background:linear-gradient(180deg,#091f36,#07192b);
+}
+.progress-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:16px;
+  margin-bottom:10px;
+}
+.progress-head>div{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.progress-head span{
+  color:var(--muted);
+  font-size:11px;
+}
+.progress-head strong{
+  font-size:28px;
+  color:var(--orange);
+}
+.progress-head b{
+  font-size:13px;
+  color:var(--yellow);
+}
+.progress-track{
+  height:9px;
+  overflow:hidden;
+  border-radius:99px;
+  background:#051522;
+  border:1px solid rgba(255,255,255,.05);
+}
+.progress-track span{
+  display:block;
+  height:100%;
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--orange),var(--yellow));
+}
+.progress-card>small{
+  display:block;
+  margin-top:8px;
+  color:#71859b;
+  font-size:10px;
+}
+.achievements{margin-top:20px}
+.achievement-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
+.achievement{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  padding:11px 12px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;
+  background:rgba(255,255,255,.02);
+  opacity:.62;
+}
+.achievement.done{
+  opacity:1;
+  border-color:rgba(255,210,63,.18);
+  background:rgba(255,210,63,.035);
+}
+.achievement>span{
+  flex:0 0 22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#0b2946;
+  color:#8ca0b7;
+  font-size:11px;
+  font-weight:900;
+}
+.achievement.done>span{
+  background:var(--yellow);
+  color:#071522;
+}
+.achievement div{display:flex;flex-direction:column;gap:2px}
+.achievement b{font-size:12px}
+.achievement small{
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+@media(max-width:700px){
+  .achievement-grid{grid-template-columns:1fr}
+}
