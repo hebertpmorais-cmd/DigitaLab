@@ -445,6 +445,10 @@ function HuntMode({ user, onTrain }) {
 function Dashboard({ user, refreshKey }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(false)
+  const [goals, setGoals] = useState({ daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 })
+  const [goalDraft, setGoalDraft] = useState({ daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 })
+  const [goalMessage, setGoalMessage] = useState('')
+  const [savingGoals, setSavingGoals] = useState(false)
 
   useEffect(() => {
     if (!user) { setSessions([]); return }
@@ -452,6 +456,64 @@ function Dashboard({ user, refreshKey }) {
     supabase.from('typing_sessions').select('*').order('created_at', { ascending: false }).limit(500)
       .then(({ data }) => { setSessions(data || []); setLoading(false) })
   }, [user, refreshKey])
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('user_typing_goals')
+      .select('daily_runs_goal, ppm_goal, accuracy_goal')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+        if (error) return
+        if (data) {
+          const loaded = {
+            daily_runs_goal: Number(data.daily_runs_goal),
+            ppm_goal: Number(data.ppm_goal),
+            accuracy_goal: Number(data.accuracy_goal)
+          }
+          setGoals(loaded)
+          setGoalDraft(loaded)
+          return
+        }
+
+        const defaults = { user_id: user.id, daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 }
+        const { error: insertError } = await supabase.from('user_typing_goals').insert(defaults)
+        if (!insertError) {
+          const clean = { daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 }
+          setGoals(clean)
+          setGoalDraft(clean)
+        }
+      })
+  }, [user])
+
+  async function saveGoals(e) {
+    e.preventDefault()
+    if (!user) return
+    setGoalMessage('')
+
+    const clean = {
+      daily_runs_goal: Math.min(50, Math.max(1, Number(goalDraft.daily_runs_goal) || 1)),
+      ppm_goal: Math.min(300, Math.max(1, Number(goalDraft.ppm_goal) || 1)),
+      accuracy_goal: Math.min(100, Math.max(50, Number(goalDraft.accuracy_goal) || 50))
+    }
+
+    setSavingGoals(true)
+    const { error } = await supabase.from('user_typing_goals').upsert({
+      user_id: user.id,
+      ...clean,
+      updated_at: new Date().toISOString()
+    })
+    setSavingGoals(false)
+
+    if (error) {
+      setGoalMessage('Não consegui salvar agora. Tente novamente.')
+      return
+    }
+
+    setGoals(clean)
+    setGoalDraft(clean)
+    setGoalMessage('Metas salvas.')
+  }
 
   if (!user) return <section className="panel empty-state"><p className="eyebrow">ESTATÍSTICAS</p><h2>Entre para acompanhar sua evolução</h2><p className="muted">Seus resultados serão salvos por conta e protegidos pelo Supabase.</p></section>
   if (loading) return <section className="panel"><p className="muted">Carregando estatísticas...</p></section>
@@ -478,9 +540,14 @@ function Dashboard({ user, refreshKey }) {
 
   const today = new Date()
   const todayKey = localDateKey(today)
-  const dailyGoal = 5
-  const todayCount = sessions.filter(s => localDateKey(s.created_at) === todayKey).length
+  const dailyGoal = goals.daily_runs_goal
+  const todaySessions = sessions.filter(s => localDateKey(s.created_at) === todayKey)
+  const todayCount = todaySessions.length
   const dailyProgress = Math.min(100, (todayCount / dailyGoal) * 100)
+  const todayBestPpm = todaySessions.length ? Math.max(...todaySessions.map(s => s.wpm)) : 0
+  const todayBestAccuracy = todaySessions.length ? Math.max(...todaySessions.map(s => Number(s.accuracy))) : 0
+  const ppmProgress = Math.min(100, (todayBestPpm / goals.ppm_goal) * 100)
+  const accuracyProgress = Math.min(100, (todayBestAccuracy / goals.accuracy_goal) * 100)
 
   const activityByDay = {}
   sessions.forEach(s => {
@@ -534,6 +601,50 @@ function Dashboard({ user, refreshKey }) {
         </div>
         <div className="progress-track"><span style={{ width: `${(xpInLevel / 200) * 100}%` }} /></div>
         <small>Cada corrida rende XP. Precisão alta e velocidade dão um bônus pequeno.</small>
+      </div>
+
+      <div className="goals-section">
+        <div className="goals-head">
+          <div>
+            <p className="eyebrow">MINHAS METAS</p>
+            <h3>Escolha o ritmo que faz sentido para você</h3>
+          </div>
+        </div>
+
+        <form className="goals-form" onSubmit={saveGoals}>
+          <label>
+            Corridas por dia
+            <input type="number" min="1" max="50" value={goalDraft.daily_runs_goal}
+              onChange={e => setGoalDraft(g => ({ ...g, daily_runs_goal: e.target.value }))} />
+          </label>
+          <label>
+            Meta de PPM
+            <input type="number" min="1" max="300" value={goalDraft.ppm_goal}
+              onChange={e => setGoalDraft(g => ({ ...g, ppm_goal: e.target.value }))} />
+          </label>
+          <label>
+            Meta de precisão (%)
+            <input type="number" min="50" max="100" step="0.1" value={goalDraft.accuracy_goal}
+              onChange={e => setGoalDraft(g => ({ ...g, accuracy_goal: e.target.value }))} />
+          </label>
+          <button className="secondary-btn" disabled={savingGoals}>{savingGoals ? 'Salvando...' : 'Salvar metas'}</button>
+        </form>
+        {goalMessage && <small className="goal-message">{goalMessage}</small>}
+
+        <div className="goal-progress-grid">
+          <div className="goal-progress-card">
+            <div><span>Corridas hoje</span><strong>{todayCount}/{dailyGoal}</strong></div>
+            <div className="routine-track"><span style={{ width: `${dailyProgress}%` }} /></div>
+          </div>
+          <div className="goal-progress-card">
+            <div><span>Melhor PPM de hoje</span><strong>{todayBestPpm}/{goals.ppm_goal}</strong></div>
+            <div className="routine-track"><span style={{ width: `${ppmProgress}%` }} /></div>
+          </div>
+          <div className="goal-progress-card">
+            <div><span>Melhor precisão de hoje</span><strong>{todayBestAccuracy.toFixed(1)}%/{goals.accuracy_goal}%</strong></div>
+            <div className="routine-track"><span style={{ width: `${accuracyProgress}%` }} /></div>
+          </div>
+        </div>
       </div>
 
       <div className="routine-grid">
