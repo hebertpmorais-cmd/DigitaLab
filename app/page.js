@@ -460,6 +460,20 @@ function Dashboard({ user, refreshKey }) {
   const avgWpm = count ? Math.round(sessions.reduce((a,s) => a+s.wpm,0)/count) : 0
   const bestWpm = count ? Math.max(...sessions.map(s => s.wpm)) : 0
   const avgAcc = count ? (sessions.reduce((a,s) => a+Number(s.accuracy),0)/count).toFixed(1) : '0.0'
+  const totalXp = sessions.reduce((total, s) => {
+    const base = 20
+    const precisionBonus = Number(s.accuracy) >= 97 ? 10 : Number(s.accuracy) >= 93 ? 5 : 0
+    const speedBonus = Math.min(20, Math.floor(s.wpm / 10) * 2)
+    return total + base + precisionBonus + speedBonus
+  }, 0)
+  const level = Math.floor(totalXp / 200) + 1
+  const xpInLevel = totalXp % 200
+  const achievements = [
+    { title: 'Primeira corrida', done: count >= 1, note: 'Complete 1 corrida.' },
+    { title: 'Pegando ritmo', done: count >= 10, note: 'Complete 10 corridas.' },
+    { title: 'Precisão afiada', done: sessions.some(s => Number(s.accuracy) >= 98), note: 'Faça uma corrida com 98% ou mais de precisão.' },
+    { title: 'Turbo ligado', done: sessions.some(s => s.wpm >= 60), note: 'Alcance 60 PPM em uma corrida.' }
+  ]
 
   return <section className="dashboard-stack">
     <div className="panel">
@@ -467,6 +481,25 @@ function Dashboard({ user, refreshKey }) {
       <div className="stats-row dashboard-stats">
         <Stat label="Treinos" value={count} /><Stat label="PPM médio" value={avgWpm} />
         <Stat label="Recorde" value={bestWpm} /><Stat label="Precisão média" value={avgAcc} suffix="%" />
+      </div>
+
+      <div className="progress-card">
+        <div className="progress-head">
+          <div><span>Nível atual</span><strong>{level}</strong></div>
+          <div><span>Experiência</span><b>{xpInLevel}/200 XP</b></div>
+        </div>
+        <div className="progress-track"><span style={{ width: `${(xpInLevel / 200) * 100}%` }} /></div>
+        <small>Cada corrida rende XP. Precisão alta e velocidade dão um bônus pequeno.</small>
+      </div>
+
+      <div className="achievements">
+        <p className="eyebrow">CONQUISTAS</p>
+        <div className="achievement-grid">
+          {achievements.map(item => <div className={item.done ? 'achievement done' : 'achievement'} key={item.title}>
+            <span>{item.done ? '✓' : '•'}</span>
+            <div><b>{item.title}</b><small>{item.note}</small></div>
+          </div>)}
+        </div>
       </div>
     </div>
     <div className="panel">
