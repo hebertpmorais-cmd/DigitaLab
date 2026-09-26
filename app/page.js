@@ -73,17 +73,20 @@ function buildHuntText(keys) {
   return `${warmup} ${pairs} ${words} ${words}`.trim()
 }
 
-function calcStats(input, text, secondsElapsed) {
-  const typed = input.length
-  let correct = 0
-  for (let i = 0; i < typed; i++) if (input[i] === text[i]) correct++
-  const errors = typed - correct
+function calcStats(input, text, secondsElapsed, attempts = 0, mistakes = 0) {
   const minutes = Math.max(secondsElapsed / 60, 1 / 60)
+  const totalAttempts = attempts || input.length
+  const correctAttempts = Math.max(0, totalAttempts - mistakes)
+
   return {
-    typed, correct, errors,
-    wpm: Math.round((correct / 5) / minutes),
-    cpm: Math.round(correct / minutes),
-    accuracy: typed ? Math.max(0, Math.round((correct / typed) * 1000) / 10) : 100
+    typed: totalAttempts,
+    correct: correctAttempts,
+    errors: mistakes,
+    wpm: Math.round((correctAttempts / 5) / minutes),
+    cpm: Math.round(correctAttempts / minutes),
+    accuracy: totalAttempts
+      ? Math.max(0, Math.round((correctAttempts / totalAttempts) * 1000) / 10)
+      : 100
   }
 }
 
@@ -111,8 +114,8 @@ function MetricsHelp() {
       <div className="metrics-help-grid">
         <div><strong>PPM</strong><span>Palavras por minuto. É a velocidade aproximada da sua digitação.</span></div>
         <div><strong>CPM</strong><span>Caracteres por minuto. Conta letras, espaços e outros caracteres digitados corretamente.</span></div>
-        <div><strong>Precisão</strong><span>Porcentagem do que você digitou corretamente durante a corrida.</span></div>
-        <div><strong>Erros</strong><span>Quantidade de caracteres digitados diferente do texto esperado.</span></div>
+        <div><strong>Precisão</strong><span>Porcentagem de tentativas corretas. Erros apagados e corrigidos continuam entrando no cálculo.</span></div>
+        <div><strong>Erros</strong><span>Total de caracteres digitados errado durante a corrida, inclusive os que você apagou e corrigiu depois.</span></div>
       </div>
     </div>
   </div>
@@ -181,9 +184,14 @@ function Trainer({ user, onSaved, initialText }) {
   const [started, setStarted] = useState(false)
   const [finished, setFinished] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [errorEvents, setErrorEvents] = useState([])
   const inputRef = useRef(null)
   const elapsed = duration - timeLeft
-  const stats = useMemo(() => calcStats(input, text, elapsed), [input, text, elapsed])
+  const stats = useMemo(
+    () => calcStats(input, text, elapsed, attempts, errorEvents.length),
+    [input, text, elapsed, attempts, errorEvents.length]
+  )
 
   useEffect(() => {
     if (initialText) {
@@ -193,6 +201,8 @@ function Trainer({ user, onSaved, initialText }) {
       setStarted(false)
       setFinished(false)
       setSaved(false)
+      setAttempts(0)
+      setErrorEvents([])
     }
   }, [initialText])
 
@@ -223,30 +233,62 @@ function Trainer({ user, onSaved, initialText }) {
         correct_chars: stats.correct
       }).select('id').single()
 
-      if (!error && data && stats.errors > 0) {
-        const rows = []
-        for (let i = 0; i < input.length; i++) {
-          if (input[i] !== text[i]) rows.push({
-            session_id: data.id, user_id: user.id, position: i,
-            expected_char: text[i] ?? '', typed_char: input[i] ?? ''
-          })
-        }
-        if (rows.length) await supabase.from('typing_errors').insert(rows)
+      if (!error && data && errorEvents.length > 0) {
+        const rows = errorEvents.map(item => ({
+          session_id: data.id,
+          user_id: user.id,
+          position: item.position,
+          expected_char: item.expected,
+          typed_char: item.typed
+        }))
+        await supabase.from('typing_errors').insert(rows)
       }
       if (!error) onSaved()
     }
     saveResult()
-  }, [finished, user, saved, input, text, elapsed, stats, onSaved])
+  }, [finished, user, saved, input, text, elapsed, stats, errorEvents, onSaved])
 
   function reset(nextDuration = duration, nextText = randomText()) {
     setDuration(nextDuration); setTimeLeft(nextDuration); setText(nextText); setInput('')
-    setStarted(false); setFinished(false); setSaved(false)
+    setStarted(false); setFinished(false); setSaved(false); setAttempts(0); setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
   }
 
   function handleChange(e) {
     if (finished) return
     const value = e.target.value.slice(0, text.length)
+
+    if (value.length > input.length) {
+      let prefix = 0
+      while (prefix < input.length && prefix < value.length && input[prefix] === value[prefix]) prefix++
+
+      const addedCount = value.length - input.length
+      const added = value.slice(prefix, prefix + addedCount)
+
+      if (added.length) {
+        setAttempts(total => total + added.length)
+
+        const newErrors = []
+        for (let offset = 0; offset < added.length; offset++) {
+          const position = prefix + offset
+          const typedChar = added[offset]
+          const expectedChar = text[position] ?? ''
+
+          if (typedChar !== expectedChar) {
+            newErrors.push({
+              position,
+              expected: expectedChar,
+              typed: typedChar
+            })
+          }
+        }
+
+        if (newErrors.length) {
+          setErrorEvents(current => [...current, ...newErrors])
+        }
+      }
+    }
+
     if (!started && value.length > 0) setStarted(true)
     setInput(value)
   }
