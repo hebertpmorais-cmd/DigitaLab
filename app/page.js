@@ -56,18 +56,18 @@ function Stat({ label, value, suffix = '' }) {
 
 function MetricsHelp() {
   return <div className="metrics-help">
-    <div className="metrics-help-title">
-      <span>?</span>
-      <div>
+    <button className="metrics-help-trigger" type="button" aria-label="Explicação das medidas">?</button>
+    <div className="metrics-help-popover">
+      <div className="metrics-help-title">
         <b>O que significam essas medidas?</b>
-        <small>Deixei essa explicação aqui porque nem todo mundo conhece as siglas.</small>
+        <small>Passei as siglas para português para ficar mais fácil de entender.</small>
       </div>
-    </div>
-    <div className="metrics-help-grid">
-      <div><strong>PPM</strong><span>Palavras por minuto. É a velocidade aproximada da sua digitação.</span></div>
-      <div><strong>CPM</strong><span>Caracteres por minuto. Conta letras, espaços e outros caracteres digitados corretamente.</span></div>
-      <div><strong>Precisão</strong><span>Porcentagem do que você digitou corretamente durante a corrida.</span></div>
-      <div><strong>Erros</strong><span>Quantidade de caracteres digitados diferente do texto esperado.</span></div>
+      <div className="metrics-help-grid">
+        <div><strong>PPM</strong><span>Palavras por minuto. É a velocidade aproximada da sua digitação.</span></div>
+        <div><strong>CPM</strong><span>Caracteres por minuto. Conta letras, espaços e outros caracteres digitados corretamente.</span></div>
+        <div><strong>Precisão</strong><span>Porcentagem do que você digitou corretamente durante a corrida.</span></div>
+        <div><strong>Erros</strong><span>Quantidade de caracteres digitados diferente do texto esperado.</span></div>
+      </div>
     </div>
   </div>
 }
@@ -336,7 +336,7 @@ export default function Home() {
 
       <footer>
         <span>RatoTurbo · projeto pessoal em desenvolvimento</span>
-        <small>Feito aos poucos, testando, errando e melhorando.</small>
+        <small>Feito aos poucos.</small>
       </footer>
     </div>
     {authOpen && <AuthBox user={user} onClose={() => setAuthOpen(false)} />}
