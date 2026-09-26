@@ -330,29 +330,171 @@ function Trainer({ user, onSaved, initialText }) {
 
 function Learn() {
   const [lesson, setLesson] = useState(0)
-  return <section className="learn-grid">
+  const [practiceInput, setPracticeInput] = useState('')
+  const [practiceAttempts, setPracticeAttempts] = useState(0)
+  const [practiceErrors, setPracticeErrors] = useState(0)
+
+  const practiceText = LESSONS[lesson].text
+  const progress = Math.min(100, (practiceInput.length / practiceText.length) * 100)
+  const practiceAccuracy = practiceAttempts
+    ? Math.max(0, ((practiceAttempts - practiceErrors) / practiceAttempts) * 100).toFixed(1)
+    : '100.0'
+
+  const learnImages = [
+    {
+      title: 'Linha base',
+      src: '/learn/linha-base.svg',
+      text: 'Os dedos começam em A S D F e J K L Ç. Use as saliências de F e J para voltar à posição sem olhar.'
+    },
+    {
+      title: 'Postura das mãos',
+      src: '/learn/postura-maos.svg',
+      text: 'Mantenha os punhos neutros, os dedos levemente curvos e os ombros relaxados.'
+    },
+    {
+      title: 'Distribuição dos dedos',
+      src: '/learn/distribuicao-dedos.svg',
+      text: 'Cada dedo fica responsável por uma região do teclado para reduzir movimentos desnecessários.'
+    }
+  ]
+
+  const videos = [
+    {
+      title: 'Como posicionar os dedos no teclado',
+      embed: 'https://www.youtube.com/embed/fD8vXvbbILw'
+    },
+    {
+      title: 'Como digitar com todos os dedos sem olhar',
+      embed: 'https://www.youtube.com/embed/5Hpdtfy_Wt8'
+    }
+  ]
+
+  function changeLesson(index) {
+    setLesson(index)
+    setPracticeInput('')
+    setPracticeAttempts(0)
+    setPracticeErrors(0)
+  }
+
+  function handlePractice(e) {
+    const value = e.target.value.slice(0, practiceText.length)
+
+    if (value.length > practiceInput.length) {
+      let prefix = 0
+      while (
+        prefix < practiceInput.length &&
+        prefix < value.length &&
+        practiceInput[prefix] === value[prefix]
+      ) prefix++
+
+      const addedCount = value.length - practiceInput.length
+      const added = value.slice(prefix, prefix + addedCount)
+
+      if (added.length) {
+        let newErrors = 0
+        for (let offset = 0; offset < added.length; offset++) {
+          const position = prefix + offset
+          if (added[offset] !== practiceText[position]) newErrors++
+        }
+        setPracticeAttempts(total => total + added.length)
+        setPracticeErrors(total => total + newErrors)
+      }
+    }
+
+    setPracticeInput(value)
+  }
+
+  return <section className="learn-stack">
     <div className="panel">
-      <p className="eyebrow">POSICIONAMENTO DAS MÃOS</p><h2>Comece sempre pela linha base</h2>
-      <p className="muted">No teclado ABNT2, use as saliências das teclas <b>F</b> e <b>J</b> para reencontrar a posição sem olhar.</p>
+      <p className="eyebrow">POSICIONAMENTO DAS MÃOS</p>
+      <h2>Primeiro entenda onde cada dedo deve ficar</h2>
+      <p className="muted">Antes de tentar ganhar velocidade, vale criar o hábito de voltar sempre para a linha base e movimentar só o necessário.</p>
+
+      <div className="learn-image-grid">
+        {learnImages.map(item => <div className="learn-image-card" key={item.title}>
+          <img src={item.src} alt={item.title} />
+          <div><b>{item.title}</b><p>{item.text}</p></div>
+        </div>)}
+      </div>
+
       <div className="home-row">{['A','S','D','F','J','K','L','Ç'].map((k,i) =>
-        <div key={k} className={k === 'F' || k === 'J' ? 'key anchor' : 'key'}><b>{k}</b><small>{['ME','AE','MdE','IE','ID','MdD','AD','MD'][i]}</small></div>
+        <div key={k} className={k === 'F' || k === 'J' ? 'key anchor' : 'key'}>
+          <b>{k}</b><small>{['ME','AE','MdE','IE','ID','MdD','AD','MD'][i]}</small>
+        </div>
       )}</div>
-      <div className="finger-grid">{HAND_GROUPS.map(item => <div className="finger-card" key={item.finger}><span>{item.finger}</span><strong>{item.keys}</strong></div>)}</div>
+
+      <div className="finger-grid">{HAND_GROUPS.map(item =>
+        <div className="finger-card" key={item.finger}><span>{item.finger}</span><strong>{item.keys}</strong></div>
+      )}</div>
+
       <div className="tip-box"><b>Postura:</b> ombros relaxados, cotovelos próximos de 90°, punhos neutros e polegares próximos à barra de espaço.</div>
     </div>
+
     <div className="panel">
-      <p className="eyebrow">AULAS PRÁTICAS</p><h2>Treino progressivo</h2>
-      <div className="lesson-list">{LESSONS.map((item,index) =>
-        <button onClick={() => setLesson(index)} className={lesson === index ? 'lesson active' : 'lesson'} key={item.title}>
+      <p className="eyebrow">VÍDEOS</p>
+      <h2>Veja o movimento antes de praticar</h2>
+      <p className="muted small-copy">Separei vídeos curtos em português para complementar os diagramas.</p>
+
+      <div className="learn-video-grid">
+        {videos.map(video => <div className="learn-video-card" key={video.embed}>
+          <div className="video-frame">
+            <iframe
+              src={video.embed}
+              title={video.title}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          <b>{video.title}</b>
+        </div>)}
+      </div>
+    </div>
+
+    <div className="panel practice-panel">
+      <p className="eyebrow">EXERCÍCIO PRÁTICO</p>
+      <h2>Agora é sua vez</h2>
+      <p className="muted small-copy">Escolha uma etapa e digite o exercício abaixo. Aqui o foco é aprender o movimento, não bater recorde.</p>
+
+      <div className="lesson-list learn-lessons">{LESSONS.map((item,index) =>
+        <button onClick={() => changeLesson(index)} className={lesson === index ? 'lesson active' : 'lesson'} key={item.title}>
           <span>{index+1}</span><div><b>{item.title}</b><small>{item.keys}</small></div>
         </button>
       )}</div>
-      <div className="practice-box"><span>Exercício sugerido</span><p>{LESSONS[lesson].text}</p></div>
-      <div className="tips"><p><b>1.</b> Evite olhar para o teclado.</p><p><b>2.</b> Busque 97% ou mais de precisão.</p><p><b>3.</b> Faça sessões curtas e frequentes.</p></div>
+
+      <div className="practice-live-stats">
+        <div><span>Precisão</span><strong>{practiceAccuracy}%</strong></div>
+        <div><span>Erros</span><strong>{practiceErrors}</strong></div>
+        <div><span>Progresso</span><strong>{Math.round(progress)}%</strong></div>
+      </div>
+
+      <div className="practice-target">
+        <CharacterText text={practiceText} input={practiceInput} />
+      </div>
+
+      <textarea
+        className="practice-entry"
+        value={practiceInput}
+        onChange={handlePractice}
+        onPaste={e => e.preventDefault()}
+        spellCheck={false}
+        placeholder="Clique aqui e comece a digitar o exercício..."
+        aria-label="Exercício prático de digitação"
+      />
+
+      <div className="practice-progress"><span style={{ width: `${progress}%` }} /></div>
+
+      <div className="practice-actions">
+        <p>{practiceInput.length >= practiceText.length ? 'Exercício concluído. Você pode repetir até o movimento ficar natural.' : 'Digite com calma e tente não olhar para o teclado.'}</p>
+        <button className="secondary-btn" onClick={() => {
+          setPracticeInput('')
+          setPracticeAttempts(0)
+          setPracticeErrors(0)
+        }}>Recomeçar</button>
+      </div>
     </div>
   </section>
 }
-
 
 function HuntMode({ user, onTrain }) {
   const [errors, setErrors] = useState([])
