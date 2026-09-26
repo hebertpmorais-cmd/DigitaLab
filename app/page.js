@@ -342,30 +342,14 @@ function Learn() {
 
   const learnImages = [
     {
-      title: 'Linha base',
-      src: '/learn/linha-base.svg',
-      text: 'Os dedos começam em A S D F e J K L Ç. Use as saliências de F e J para voltar à posição sem olhar.'
+      title: 'Posição inicial',
+      src: '/learn/posicao-inicial-ratoturbo.svg',
+      text: 'Comece pela linha base. F e J servem como referência para posicionar as mãos sem precisar olhar.'
     },
     {
-      title: 'Postura das mãos',
-      src: '/learn/postura-maos.svg',
-      text: 'Mantenha os punhos neutros, os dedos levemente curvos e os ombros relaxados.'
-    },
-    {
-      title: 'Distribuição dos dedos',
-      src: '/learn/distribuicao-dedos.svg',
-      text: 'Cada dedo fica responsável por uma região do teclado para reduzir movimentos desnecessários.'
-    }
-  ]
-
-  const videos = [
-    {
-      title: 'Como posicionar os dedos no teclado',
-      embed: 'https://www.youtube.com/embed/fD8vXvbbILw'
-    },
-    {
-      title: 'Como digitar com todos os dedos sem olhar',
-      embed: 'https://www.youtube.com/embed/5Hpdtfy_Wt8'
+      title: 'Movimento correto',
+      src: '/learn/movimento-dedos-ratoturbo.svg',
+      text: 'O dedo alcança a tecla da região dele e depois volta para a posição inicial. Evite deslocar a mão inteira.'
     }
   ]
 
@@ -410,7 +394,7 @@ function Learn() {
       <h2>Primeiro entenda onde cada dedo deve ficar</h2>
       <p className="muted">Antes de tentar ganhar velocidade, vale criar o hábito de voltar sempre para a linha base e movimentar só o necessário.</p>
 
-      <div className="learn-image-grid">
+      <div className="learn-image-grid visual-guides">
         {learnImages.map(item => <div className="learn-image-card" key={item.title}>
           <img src={item.src} alt={item.title} />
           <div><b>{item.title}</b><p>{item.text}</p></div>
@@ -430,31 +414,10 @@ function Learn() {
       <div className="tip-box"><b>Postura:</b> ombros relaxados, cotovelos próximos de 90°, punhos neutros e polegares próximos à barra de espaço.</div>
     </div>
 
-    <div className="panel">
-      <p className="eyebrow">VÍDEOS</p>
-      <h2>Veja o movimento antes de praticar</h2>
-      <p className="muted small-copy">Separei vídeos curtos em português para complementar os diagramas.</p>
-
-      <div className="learn-video-grid">
-        {videos.map(video => <div className="learn-video-card" key={video.embed}>
-          <div className="video-frame">
-            <iframe
-              src={video.embed}
-              title={video.title}
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-          <b>{video.title}</b>
-        </div>)}
-      </div>
-    </div>
-
     <div className="panel practice-panel">
       <p className="eyebrow">EXERCÍCIO PRÁTICO</p>
       <h2>Agora é sua vez</h2>
-      <p className="muted small-copy">Escolha uma etapa e digite o exercício abaixo. Aqui o foco é aprender o movimento, não bater recorde.</p>
+      <p className="muted small-copy">Veja os dois guias acima e depois pratique aqui. O foco é repetir o movimento certo até ele começar a ficar natural.</p>
 
       <div className="lesson-list learn-lessons">{LESSONS.map((item,index) =>
         <button onClick={() => changeLesson(index)} className={lesson === index ? 'lesson active' : 'lesson'} key={item.title}>
