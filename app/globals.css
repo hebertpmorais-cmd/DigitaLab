@@ -1110,3 +1110,134 @@ footer:before{display:none}
 @media(max-width:560px){
   .goals-form{grid-template-columns:1fr}
 }
+
+/* Evolução dos treinos */
+.evolution-section{
+  margin-top:14px;
+  padding:16px;
+  border:1px solid rgba(70,167,255,.11);
+  border-radius:10px;
+  background:rgba(255,255,255,.018);
+}
+.evolution-title{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+}
+.evolution-title h3{
+  margin:0;
+  font-size:16px;
+}
+.evolution-title>small{
+  color:#667d95;
+  font-size:10px;
+}
+.evolution-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin-top:14px;
+}
+.evolution-card{
+  padding:13px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:9px;
+  background:#07192b;
+}
+.evolution-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.evolution-head>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.evolution-head b{font-size:12px}
+.evolution-head small{
+  color:var(--muted);
+  font-size:10px;
+}
+.trend{
+  padding:4px 7px;
+  border-radius:6px;
+  background:rgba(255,255,255,.04);
+  color:#8ca0b7;
+  font-size:10px;
+  font-weight:800;
+}
+.trend.up{
+  color:var(--yellow);
+  background:rgba(255,210,63,.07);
+}
+.trend.down{
+  color:#ff8c95;
+  background:rgba(230,57,70,.08);
+}
+.evolution-chart{
+  display:block;
+  width:100%;
+  height:auto;
+  margin-top:8px;
+  overflow:visible;
+}
+.chart-grid{
+  stroke:rgba(255,255,255,.055);
+  stroke-width:1;
+}
+.chart-goal{
+  stroke:rgba(255,210,63,.48);
+  stroke-width:1.5;
+  stroke-dasharray:7 6;
+}
+.chart-line{
+  fill:none;
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.chart-line.ppm{stroke:var(--orange)}
+.chart-line.accuracy{stroke:var(--blue-light)}
+.chart-point{
+  fill:#07192b;
+  stroke:var(--blue-light);
+  stroke-width:2.5;
+}
+.evolution-card:first-child .chart-point{
+  stroke:var(--orange);
+}
+.chart-point.goal-hit{
+  fill:var(--yellow);
+  stroke:var(--yellow);
+}
+.chart-footer{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  color:#748aa1;
+  font-size:10px;
+}
+.chart-footer b{
+  color:#dce7f4;
+}
+.evolution-empty{
+  padding:28px 14px;
+  color:#748aa1;
+  font-size:11px;
+  text-align:center;
+  border:1px dashed rgba(255,255,255,.06);
+  border-radius:8px;
+}
+@media(max-width:850px){
+  .evolution-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .evolution-title{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:6px;
+  }
+}
