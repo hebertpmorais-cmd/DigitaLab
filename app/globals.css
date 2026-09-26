@@ -593,3 +593,93 @@ footer:before{display:none}
 @media(max-width:800px){
   .metrics-help-grid{grid-template-columns:1fr}
 }
+
+/* Ajuda das métricas minimizada */
+.metrics-help{
+  position:relative;
+  display:flex;
+  justify-content:flex-end;
+  margin:-8px 0 14px;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.metrics-help-trigger{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid rgba(255,210,63,.38);
+  background:rgba(255,210,63,.08);
+  color:var(--yellow);
+  font-weight:900;
+  cursor:help;
+}
+.metrics-help-trigger:hover,
+.metrics-help-trigger:focus{
+  background:rgba(255,210,63,.14);
+  outline:none;
+}
+.metrics-help-popover{
+  position:absolute;
+  z-index:30;
+  top:36px;
+  right:0;
+  width:min(520px,88vw);
+  padding:14px;
+  border:1px solid rgba(70,167,255,.25);
+  border-radius:10px;
+  background:#071a2e;
+  box-shadow:0 18px 50px rgba(0,0,0,.38);
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-4px);
+  pointer-events:none;
+  transition:opacity .16s ease,transform .16s ease,visibility .16s ease;
+}
+.metrics-help:hover .metrics-help-popover,
+.metrics-help:focus-within .metrics-help-popover{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+.metrics-help-title{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin-bottom:10px;
+}
+.metrics-help-title b{font-size:13px}
+.metrics-help-title small{color:var(--muted);line-height:1.4}
+.metrics-help-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+.metrics-help-grid>div{
+  padding:9px 10px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:7px;
+  background:rgba(255,255,255,.025);
+}
+.metrics-help-grid strong{
+  display:block;
+  color:var(--orange);
+  font-size:12px;
+  margin-bottom:3px;
+}
+.metrics-help-grid span{
+  color:#b7c5d6;
+  font-size:12px;
+  line-height:1.4;
+}
+@media(max-width:800px){
+  .metrics-help-popover{
+    right:auto;
+    left:0;
+    width:min(420px,86vw);
+  }
+  .metrics-help-grid{grid-template-columns:1fr}
+}
