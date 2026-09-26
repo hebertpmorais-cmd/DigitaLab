@@ -1517,3 +1517,38 @@ footer:before{display:none}
   color:#e7d98f;
   background:rgba(255,210,63,.05);
 }
+
+/* Guia visual em cinco etapas */
+.visual-guides{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.visual-guides .learn-image-card{
+  position:relative;
+}
+.visual-guides .learn-image-card:nth-child(5){
+  grid-column:1 / -1;
+  max-width:calc(50% - 6px);
+}
+.guide-number{
+  position:absolute;
+  z-index:2;
+  top:12px;
+  left:12px;
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),var(--yellow));
+  color:#061525;
+  font-size:12px;
+  font-weight:900;
+  box-shadow:0 5px 18px rgba(255,122,0,.22);
+}
+@media(max-width:900px){
+  .visual-guides{grid-template-columns:1fr}
+  .visual-guides .learn-image-card:nth-child(5){
+    grid-column:auto;
+    max-width:none;
+  }
+}
