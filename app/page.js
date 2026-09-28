@@ -335,6 +335,7 @@ function Learn({ user }) {
   const [practiceErrors, setPracticeErrors] = useState(0)
   const [learningProgress, setLearningProgress] = useState({})
   const [progressMessage, setProgressMessage] = useState('')
+  const [openGuide, setOpenGuide] = useState(null)
 
   const practiceText = LESSONS[lesson].text
   const progress = Math.min(100, (practiceInput.length / practiceText.length) * 100)
@@ -474,11 +475,20 @@ function Learn({ user }) {
       </div>
 
       <div className="learn-image-grid visual-guides">
-        {learnImages.map((item,index) => <div className="learn-image-card" key={item.title}>
+        {learnImages.map((item,index) => <button
+          type="button"
+          className="learn-image-card guide-button"
+          key={item.title}
+          onClick={() => setOpenGuide({ ...item, index })}
+        >
           <div className="guide-number">{index + 1}</div>
           <img src={item.src} alt={item.title} />
-          <div><b>{item.title}</b><p>{item.text}</p></div>
-        </div>)}
+          <div>
+            <b>{item.title}</b>
+            <p>{item.text}</p>
+            <span className="guide-open-hint">Clique para ampliar</span>
+          </div>
+        </button>)}
       </div>
 
       <div className="home-row">{['A','S','D','F','J','K','L','Ç'].map((k,i) =>
@@ -497,7 +507,7 @@ function Learn({ user }) {
     <div className="panel practice-panel">
       <p className="eyebrow">EXERCÍCIO PRÁTICO</p>
       <h2>Agora é sua vez</h2>
-      <p className="muted small-copy">Veja os dois guias acima e depois pratique aqui. O foco é repetir o movimento certo até ele começar a ficar natural.</p>
+      <p className="muted small-copy">Veja os cinco guias acima e depois pratique aqui. O foco é repetir o movimento certo até ele começar a ficar natural.</p>
 
       <div className="lesson-list learn-lessons">{LESSONS.map((item,index) => {
         const progressItem = learningProgress[index]
@@ -545,6 +555,26 @@ function Learn({ user }) {
         }}>Recomeçar</button>
       </div>
     </div>
+
+    {openGuide && <div className="guide-modal" onMouseDown={e => {
+      if (e.target === e.currentTarget) setOpenGuide(null)
+    }}>
+      <div className="guide-modal-content">
+        <button
+          className="guide-close"
+          type="button"
+          aria-label="Fechar imagem ampliada"
+          onClick={() => setOpenGuide(null)}
+        >×</button>
+        <div className="guide-modal-number">{openGuide.index + 1}</div>
+        <img src={openGuide.src} alt={openGuide.title} />
+        <div className="guide-modal-text">
+          <p className="eyebrow">GUIA {openGuide.index + 1} DE {learnImages.length}</p>
+          <h3>{openGuide.title}</h3>
+          <p>{openGuide.text}</p>
+        </div>
+      </div>
+    </div>}
   </section>
 }
 
