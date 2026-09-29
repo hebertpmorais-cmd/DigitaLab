@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 288">
+<rect width="512" height="288" rx="18" fill="#061525"/>
+<rect x="18" y="18" width="476" height="252" rx="16" fill="#0a2139" stroke="#214568"/>
+<text x="34" y="48" fill="#ffd23f" font-size="11" font-family="Arial" font-weight="700">RATOTURBO • APRENDER</text>
+<text x="34" y="78" fill="#f8fafc" font-size="24" font-family="Arial" font-weight="700">Qual dedo usa cada região</text>
+<text x="34" y="98" fill="#afbdd0" font-size="11" font-family="Arial">Cada dedo fica responsável por um grupo de teclas.</text>
+<g transform="translate(33 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#46a7ff" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#46a7ff"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">Q A</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">Z</text>
+<text x="24" y="86" fill="#46a7ff" font-size="7" font-family="Arial" text-anchor="middle">Mindinho</text>
+</g><g transform="translate(90 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#62d68a" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#62d68a"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">W S</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">X</text>
+<text x="24" y="86" fill="#62d68a" font-size="7" font-family="Arial" text-anchor="middle">Anelar</text>
+</g><g transform="translate(147 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#ffd23f" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#ffd23f"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">E D</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">C</text>
+<text x="24" y="86" fill="#ffd23f" font-size="7" font-family="Arial" text-anchor="middle">Médio</text>
+</g><g transform="translate(204 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#ff7a00" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#ff7a00"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">R T</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">F G V B</text>
+<text x="24" y="86" fill="#ff7a00" font-size="7" font-family="Arial" text-anchor="middle">Indicador</text>
+</g><g transform="translate(261 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#ff7a00" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#ff7a00"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">Y U</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">H J N M</text>
+<text x="24" y="86" fill="#ff7a00" font-size="7" font-family="Arial" text-anchor="middle">Indicador</text>
+</g><g transform="translate(318 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#ffd23f" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#ffd23f"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">I K</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">,</text>
+<text x="24" y="86" fill="#ffd23f" font-size="7" font-family="Arial" text-anchor="middle">Médio</text>
+</g><g transform="translate(375 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#62d68a" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#62d68a"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">O L</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">.</text>
+<text x="24" y="86" fill="#62d68a" font-size="7" font-family="Arial" text-anchor="middle">Anelar</text>
+</g><g transform="translate(432 126)">
+<rect width="48" height="98" rx="10" fill="#091d33" stroke="#9b7cff" stroke-width="2"/>
+<circle cx="24" cy="16" r="7" fill="#9b7cff"/>
+<text x="24" y="39" fill="#fff" font-size="10" font-family="Arial" font-weight="700" text-anchor="middle">P Ç</text>
+<text x="24" y="55" fill="#fff" font-size="9" font-family="Arial" font-weight="700" text-anchor="middle">; /</text>
+<text x="24" y="86" fill="#9b7cff" font-size="7" font-family="Arial" text-anchor="middle">Mindinho</text>
+</g>
+<rect x="128" y="240" width="256" height="22" rx="11" fill="#091d33" stroke="#214568"/>
+<text x="256" y="254" text-anchor="middle" fill="#f8fafc" font-size="9" font-family="Arial">Objetivo: mover o dedo certo sem arrastar a mão inteira.</text>
+</svg>
