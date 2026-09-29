@@ -1780,3 +1780,98 @@ footer:before{display:none}
   }
   .practice-space{width:72%}
 }
+
+/* Progressão guiada das aulas */
+.lesson-focus-card{
+  margin:14px 0 10px;
+  padding:14px;
+  border:1px solid rgba(255,122,0,.18);
+  border-radius:9px;
+  background:linear-gradient(180deg,rgba(255,122,0,.045),rgba(255,255,255,.015));
+}
+.lesson-focus-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.lesson-focus-top span{
+  color:var(--yellow);
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.lesson-focus-top b{
+  font-size:14px;
+}
+.lesson-focus-card p{
+  margin:8px 0 4px;
+  color:#d7e2ee;
+  font-size:12px;
+  line-height:1.5;
+}
+.lesson-focus-card small{
+  color:var(--muted);
+  font-size:10px;
+}
+.lesson-navigation{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.lesson-navigation-center{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.lesson-navigation-center>span{
+  color:var(--muted);
+  font-size:10px;
+}
+.lesson-navigation button:disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+.course-complete{
+  padding:10px 14px;
+  border:1px solid rgba(255,210,63,.24);
+  border-radius:8px;
+  background:rgba(255,210,63,.06);
+  color:var(--yellow);
+  font-size:11px;
+  font-weight:900;
+}
+.recommended-lesson{
+  width:100%;
+  margin-top:10px;
+  padding:10px 12px;
+  border:1px dashed rgba(70,167,255,.2);
+  border-radius:8px;
+  background:rgba(70,167,255,.035);
+  color:#9eb2c7;
+  text-align:left;
+  cursor:pointer;
+  font-size:10px;
+}
+.recommended-lesson b{
+  color:var(--blue-light);
+}
+.recommended-lesson:hover{
+  border-color:rgba(70,167,255,.38);
+  background:rgba(70,167,255,.06);
+}
+@media(max-width:700px){
+  .lesson-navigation{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .lesson-navigation-center{
+    align-items:stretch;
+    flex-direction:column;
+  }
+}
