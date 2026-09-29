@@ -343,6 +343,32 @@ function Learn({ user }) {
     ? Math.max(0, ((practiceAttempts - practiceErrors) / practiceAttempts) * 100).toFixed(1)
     : '100.0'
 
+  const practiceKeyboardRows = [
+    ['Q','W','E','R','T','Y','U','I','O','P'],
+    ['A','S','D','F','G','H','J','K','L','Ç'],
+    ['Z','X','C','V','B','N','M',',','.',';']
+  ]
+
+  const currentPracticeChar = practiceInput.length < practiceText.length
+    ? practiceText[practiceInput.length]
+    : ''
+
+  const currentPracticeKey = currentPracticeChar === ' '
+    ? 'ESPAÇO'
+    : currentPracticeChar.toLocaleUpperCase('pt-BR')
+
+  const currentPracticeFinger = currentPracticeChar === ' '
+    ? 'Polegar'
+    : fingerForKey(currentPracticeChar)
+
+  const currentPracticeHand = currentPracticeChar === ' '
+    ? 'Ambas as mãos'
+    : currentPracticeFinger.endsWith(' E')
+      ? 'Mão esquerda'
+      : currentPracticeFinger.endsWith(' D')
+        ? 'Mão direita'
+        : 'Tecla especial'
+
   useEffect(() => {
     if (!user) {
       setLearningProgress({})
@@ -530,6 +556,32 @@ function Learn({ user }) {
 
       <div className="practice-target">
         <CharacterText text={practiceText} input={practiceInput} />
+      </div>
+
+      <div className="finger-coach">
+        <div className="finger-coach-main">
+          <span>Próxima tecla</span>
+          <strong>{currentPracticeKey || '✓'}</strong>
+        </div>
+        <div className="finger-coach-info">
+          <div><span>Dedo</span><b>{currentPracticeChar ? currentPracticeFinger : 'Exercício concluído'}</b></div>
+          <div><span>Mão</span><b>{currentPracticeChar ? currentPracticeHand : '—'}</b></div>
+        </div>
+      </div>
+
+      <div className="practice-keyboard" aria-label="Teclado virtual ABNT2">
+        {practiceKeyboardRows.map((row,rowIndex) => <div className="practice-keyboard-row" key={rowIndex}>
+          {row.map(key => {
+            const target = currentPracticeChar !== ' ' && normalizeKey(key) === normalizeKey(currentPracticeChar)
+            const anchor = key === 'F' || key === 'J'
+            return <div className={`practice-key ${target ? 'target' : ''} ${anchor ? 'anchor' : ''}`} key={key}>
+              {key}
+            </div>
+          })}
+        </div>)}
+        <div className="practice-space-row">
+          <div className={`practice-space ${currentPracticeChar === ' ' ? 'target' : ''}`}>ESPAÇO</div>
+        </div>
       </div>
 
       <textarea
