@@ -1875,3 +1875,100 @@ footer:before{display:none}
     flex-direction:column;
   }
 }
+
+/* Revisão inteligente dos erros da aula */
+.lesson-focus-card.review{
+  border-color:rgba(70,167,255,.24);
+  background:linear-gradient(180deg,rgba(70,167,255,.06),rgba(255,255,255,.015));
+}
+.lesson-diagnosis{
+  margin-top:12px;
+  padding:14px;
+  border:1px solid rgba(230,57,70,.16);
+  border-radius:10px;
+  background:rgba(230,57,70,.035);
+}
+.lesson-diagnosis-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.lesson-diagnosis-head h3{
+  margin:2px 0 0;
+  font-size:15px;
+}
+.lesson-error-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-top:12px;
+}
+.lesson-error-key{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.05);
+  border-radius:8px;
+  background:#07192b;
+}
+.lesson-error-key>strong{
+  width:36px;
+  height:36px;
+  display:grid;
+  place-items:center;
+  flex:0 0 36px;
+  border-radius:7px;
+  background:rgba(230,57,70,.1);
+  border:1px solid rgba(230,57,70,.28);
+  color:#ff9299;
+  font-size:16px;
+}
+.lesson-error-key>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.lesson-error-key b{
+  font-size:10px;
+}
+.lesson-error-key small{
+  color:var(--muted);
+  font-size:9px;
+}
+.review-complete{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:12px;
+  padding:12px 14px;
+  border:1px solid rgba(255,210,63,.18);
+  border-radius:9px;
+  background:rgba(255,210,63,.04);
+}
+.review-complete>div{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.review-complete b{
+  color:var(--yellow);
+  font-size:12px;
+}
+.review-complete span{
+  color:var(--muted);
+  font-size:10px;
+}
+@media(max-width:800px){
+  .lesson-error-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px){
+  .lesson-diagnosis-head,
+  .review-complete{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .lesson-error-grid{grid-template-columns:1fr}
+}
