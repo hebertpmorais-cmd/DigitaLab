@@ -468,27 +468,27 @@ function Learn({ user }) {
   const learnImages = [
     {
       title: 'Posição inicial',
-      src: '/learn/posicao-inicial-v2.svg',
+      src: '/learn/posicao-inicial-chat.webp',
       text: 'Comece pela linha base. F e J servem como referência para posicionar as mãos sem precisar olhar.'
     },
     {
       title: 'Movimento correto',
-      src: '/learn/movimento-correto-v2.svg',
+      src: '/learn/movimento-correto-chat.webp',
       text: 'O dedo alcança a tecla da região dele e depois volta para a posição inicial. Evite deslocar a mão inteira.'
     },
     {
       title: 'Região de cada dedo',
-      src: '/learn/mapa-dedos-v2.svg',
+      src: '/learn/mapa-dedos-chat.webp',
       text: 'Veja quais teclas ficam sob responsabilidade de cada dedo para diminuir movimentos desnecessários.'
     },
     {
       title: 'Postura correta',
-      src: '/learn/postura-correta-v2.svg',
+      src: '/learn/postura-correta-chat.webp',
       text: 'Mantenha costas apoiadas, ombros relaxados, cotovelos próximos de 90° e punhos neutros.'
     },
     {
       title: 'Erros comuns',
-      src: '/learn/erros-comuns-v2.svg',
+      src: '/learn/erros-comuns-chat.webp',
       text: 'Evite olhar para o teclado, mover a mão inteira, levantar os punhos e manter os dedos rígidos.'
     }
   ]
