@@ -1972,3 +1972,69 @@ footer:before{display:none}
   }
   .lesson-error-grid{grid-template-columns:1fr}
 }
+
+/* Modos de corrida */
+.mode-picker{
+  margin:14px 0 10px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:9px;
+  background:#081b30;
+}
+.mode-picker-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.mode-picker-head span{
+  color:#e8eef5;
+  font-size:11px;
+  font-weight:800;
+}
+.mode-picker-head small{
+  color:var(--muted);
+  font-size:10px;
+}
+.mode-picker-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.mode-chip{
+  min-width:86px;
+  padding:8px 12px;
+  border:1px solid rgba(70,167,255,.16);
+  border-radius:7px;
+  background:#07192b;
+  color:#9fb1c4;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.mode-chip:hover:not(:disabled){
+  border-color:rgba(255,122,0,.35);
+  color:#fff;
+}
+.mode-chip.active{
+  border-color:var(--orange);
+  background:rgba(255,122,0,.1);
+  color:var(--yellow);
+}
+.mode-chip:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+@media(max-width:600px){
+  .mode-picker-head{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+  .mode-picker-options{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+  }
+  .mode-chip{width:100%}
+}
