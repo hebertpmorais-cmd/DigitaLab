@@ -25,7 +25,37 @@ const HAND_GROUPS = [
   { finger: 'Anelar D', keys: 'O L .' }, { finger: 'Mindinho D', keys: 'P Ç ; /' },
 ]
 
-const randomText = () => TEXTS[Math.floor(Math.random() * TEXTS.length)]
+const TRAINING_MODES = [
+  { id: 'text', label: 'Texto', note: 'Frases completas' },
+  { id: 'words', label: 'Palavras', note: 'Palavras soltas' },
+  { id: 'numbers', label: 'Números', note: 'Sequências numéricas' },
+  { id: 'symbols', label: 'Símbolos', note: 'Pontuação e sinais' }
+]
+
+const MODE_WORDS = [
+  'teclado','ritmo','foco','prática','precisão','velocidade','memória','estudo',
+  'trabalho','dedos','pista','controle','texto','palavra','toque','movimento',
+  'resultado','treino','acerto','natural','tempo','linha','base','técnica'
+]
+
+function generateTrainingText(mode = 'text') {
+  if (mode === 'words') {
+    return Array.from({ length: 24 }, (_, i) => MODE_WORDS[(i * 7 + Math.floor(Math.random() * MODE_WORDS.length)) % MODE_WORDS.length]).join(' ')
+  }
+
+  if (mode === 'numbers') {
+    return Array.from({ length: 14 }, () => String(Math.floor(100 + Math.random() * 9900))).join(' ')
+  }
+
+  if (mode === 'symbols') {
+    const groups = ['! @ # $ %', '& * ( )', '- _ + =', ': ; , .', '? / \\', '[ ] { }', '< > |']
+    return Array.from({ length: 5 }, (_, i) => groups[(i + Math.floor(Math.random() * groups.length)) % groups.length]).join('   ')
+  }
+
+  return TEXTS[Math.floor(Math.random() * TEXTS.length)]
+}
+
+const randomText = () => generateTrainingText('text')
 
 const FINGER_MAP = {
   q:'Mindinho E', a:'Mindinho E', z:'Mindinho E',
@@ -178,6 +208,7 @@ function AuthBox({ user, onClose }) {
 
 function Trainer({ user, onSaved, initialText }) {
   const [duration, setDuration] = useState(30)
+  const [mode, setMode] = useState('text')
   const [text, setText] = useState(initialText || TEXTS[0])
   const [input, setInput] = useState('')
   const [timeLeft, setTimeLeft] = useState(30)
@@ -195,6 +226,7 @@ function Trainer({ user, onSaved, initialText }) {
 
   useEffect(() => {
     if (initialText) {
+      setMode('text')
       setText(initialText)
       setInput('')
       setTimeLeft(duration)
@@ -224,7 +256,7 @@ function Trainer({ user, onSaved, initialText }) {
       const { data, error } = await supabase.from('typing_sessions').insert({
         user_id: user.id,
         duration_seconds: Math.max(1, elapsed),
-        mode: 'text',
+        mode,
         wpm: stats.wpm,
         cpm: stats.cpm,
         accuracy: stats.accuracy,
@@ -246,11 +278,24 @@ function Trainer({ user, onSaved, initialText }) {
       if (!error) onSaved()
     }
     saveResult()
-  }, [finished, user, saved, input, text, elapsed, stats, errorEvents, onSaved])
+  }, [finished, user, saved, input, text, elapsed, stats, errorEvents, mode, onSaved])
 
-  function reset(nextDuration = duration, nextText = randomText()) {
+  function reset(nextDuration = duration, nextText = generateTrainingText(mode)) {
     setDuration(nextDuration); setTimeLeft(nextDuration); setText(nextText); setInput('')
     setStarted(false); setFinished(false); setSaved(false); setAttempts(0); setErrorEvents([])
+    setTimeout(() => inputRef.current?.focus(), 30)
+  }
+
+  function changeMode(nextMode) {
+    setMode(nextMode)
+    setText(generateTrainingText(nextMode))
+    setInput('')
+    setTimeLeft(duration)
+    setStarted(false)
+    setFinished(false)
+    setSaved(false)
+    setAttempts(0)
+    setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
   }
 
@@ -300,6 +345,22 @@ function Trainer({ user, onSaved, initialText }) {
         <button key={sec} className={duration === sec ? 'chip active' : 'chip'} onClick={() => reset(sec)}>{sec}s</button>
       )}</div>
     </div>
+    <div className="mode-picker">
+      <div className="mode-picker-head">
+        <span>Tipo de corrida</span>
+        <small>{TRAINING_MODES.find(item => item.id === mode)?.note}</small>
+      </div>
+      <div className="mode-picker-options">
+        {TRAINING_MODES.map(item => <button
+          type="button"
+          key={item.id}
+          className={mode === item.id ? 'mode-chip active' : 'mode-chip'}
+          onClick={() => changeMode(item.id)}
+          disabled={started}
+        >{item.label}</button>)}
+      </div>
+    </div>
+
     {!user && <div className="save-hint">Corra livremente. Entre na sua toca para salvar o rastro e acompanhar sua evolução.</div>}
     <div className="dev-note">
       <b>Nota do projeto:</b>
@@ -317,13 +378,13 @@ function Trainer({ user, onSaved, initialText }) {
     </button>
     <div className="trainer-footer">
       <p>{started ? 'Turbo ligado — mantenha os olhos na tela.' : finished ? 'Corrida finalizada.' : 'Comece a digitar para largar.'}</p>
-      <button className="secondary-btn" onClick={() => reset()}>Nova corrida</button>
+      <button className="secondary-btn" onClick={() => reset(duration, generateTrainingText(mode))}>Nova corrida</button>
     </div>
     {finished && <div className="result-box">
       <p className="eyebrow">CHEGADA {user && saved ? '• RASTRO SALVO' : ''}</p>
       <div className="result-main"><strong>{stats.wpm}</strong><span>PPM</span></div>
       <p>{stats.accuracy >= 97 ? 'Ótima precisão. Agora tente aumentar o ritmo gradualmente.' : stats.accuracy >= 93 ? 'Bom equilíbrio. Tente reduzir os erros antes de acelerar.' : 'Priorize a precisão no próximo treino e diminua um pouco o ritmo.'}</p>
-      <button className="primary-btn" onClick={() => reset()}>Correr novamente</button>
+      <button className="primary-btn" onClick={() => reset(duration, generateTrainingText(mode))}>Correr novamente</button>
     </div>}
   </section>
 }
@@ -1153,7 +1214,7 @@ function Dashboard({ user, refreshKey }) {
       {sessions.length === 0 ? <p className="muted">Finalize sua primeira corrida para começar o rastro.</p> :
         <div className="history-list">{sessions.map(s => <div className="history-row" key={s.id}>
           <div><strong>{s.wpm} PPM</strong><span>{new Date(s.created_at).toLocaleString('pt-BR')}</span></div>
-          <div><b>{Number(s.accuracy).toFixed(1)}%</b><span>{s.errors} erros · {s.duration_seconds}s</span></div>
+          <div><b>{Number(s.accuracy).toFixed(1)}%</b><span>{s.errors} erros · {s.duration_seconds}s · {TRAINING_MODES.find(item => item.id === s.mode)?.label || 'Treino'}</span></div>
         </div>)}</div>
       }
     </div>
