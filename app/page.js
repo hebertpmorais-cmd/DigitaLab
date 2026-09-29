@@ -12,10 +12,10 @@ const TEXTS = [
 ]
 
 const LESSONS = [
-  { title: 'Linha base', keys: 'asdf jklç', text: 'asdf jklç asdf jklç fj fj dk dk sl sl aç aç' },
-  { title: 'Linha superior', keys: 'qwerty uiop', text: 'queiro teto tipo pior quero perto toque equipe roteiro' },
-  { title: 'Linha inferior', keys: 'zxcvb nm', text: 'zona caixa vivo banco nome cinema vinho combo' },
-  { title: 'Palavras', keys: 'alfabeto completo', text: 'trabalho estudo foco teclado prática ritmo precisão velocidade' },
+  { title: 'Linha base', keys: 'asdf jklç', objective: 'Fixar a posição inicial das mãos e voltar naturalmente para F e J.', text: 'asdf jklç asdf jklç fj fj dk dk sl sl aç aç' },
+  { title: 'Linha superior', keys: 'qwerty uiop', objective: 'Alcançar a linha superior sem deslocar a mão inteira.', text: 'queiro teto tipo pior quero perto toque equipe roteiro' },
+  { title: 'Linha inferior', keys: 'zxcvb nm', objective: 'Praticar a descida dos dedos mantendo os punhos neutros.', text: 'zona caixa vivo banco nome cinema vinho combo' },
+  { title: 'Palavras', keys: 'alfabeto completo', objective: 'Juntar as três linhas e manter precisão em palavras completas.', text: 'trabalho estudo foco teclado prática ritmo precisão velocidade' },
 ]
 
 const HAND_GROUPS = [
@@ -388,6 +388,9 @@ function Learn({ user }) {
   const completedCount = LESSONS.filter((_, index) => learningProgress[index]?.completed).length
   const courseProgress = Math.round((completedCount / LESSONS.length) * 100)
   const nextLesson = LESSONS.findIndex((_, index) => !learningProgress[index]?.completed)
+  const currentLessonCompleted = Boolean(learningProgress[lesson]?.completed)
+  const currentLessonFinishedNow = practiceInput.length >= practiceText.length && Number(practiceAccuracy) >= 97
+  const canContinue = currentLessonCompleted || currentLessonFinishedNow
 
   const learnImages = [
     {
@@ -422,6 +425,20 @@ function Learn({ user }) {
     setPracticeInput('')
     setPracticeAttempts(0)
     setPracticeErrors(0)
+  }
+
+  function goPreviousLesson() {
+    if (lesson <= 0) return
+    changeLesson(lesson - 1)
+  }
+
+  function goNextLesson() {
+    if (lesson >= LESSONS.length - 1) return
+    changeLesson(lesson + 1)
+  }
+
+  function goRecommendedLesson() {
+    if (nextLesson >= 0) changeLesson(nextLesson)
   }
 
   async function saveLessonProgress() {
@@ -535,6 +552,15 @@ function Learn({ user }) {
       <h2>Agora é sua vez</h2>
       <p className="muted small-copy">Veja os cinco guias acima e depois pratique aqui. O foco é repetir o movimento certo até ele começar a ficar natural.</p>
 
+      <div className="lesson-focus-card">
+        <div className="lesson-focus-top">
+          <span>Aula {lesson + 1} de {LESSONS.length}</span>
+          <b>{LESSONS[lesson].title}</b>
+        </div>
+        <p>{LESSONS[lesson].objective}</p>
+        <small>Meta para concluir: finalizar o exercício com pelo menos 97% de precisão.</small>
+      </div>
+
       <div className="lesson-list learn-lessons">{LESSONS.map((item,index) => {
         const progressItem = learningProgress[index]
         const classes = [lesson === index ? 'lesson active' : 'lesson', progressItem?.completed ? 'completed' : ''].join(' ')
@@ -599,13 +625,33 @@ function Learn({ user }) {
       {progressMessage && <div className="practice-save-note success">{progressMessage}</div>}
 
       <div className="practice-actions">
-        <p>{practiceInput.length >= practiceText.length ? 'Exercício concluído. Você pode repetir até o movimento ficar natural.' : 'Digite com calma e tente não olhar para o teclado.'}</p>
+        <p>{practiceInput.length >= practiceText.length
+          ? Number(practiceAccuracy) >= 97
+            ? 'Aula concluída com a precisão necessária.'
+            : 'Exercício finalizado. Repita para chegar a 97% de precisão.'
+          : 'Digite com calma e tente não olhar para o teclado.'}</p>
         <button className="secondary-btn" onClick={() => {
           setPracticeInput('')
           setPracticeAttempts(0)
           setPracticeErrors(0)
         }}>Recomeçar</button>
       </div>
+
+      <div className="lesson-navigation">
+        <button className="secondary-btn" disabled={lesson === 0} onClick={goPreviousLesson}>← Aula anterior</button>
+        <div className="lesson-navigation-center">
+          <span>{currentLessonCompleted ? 'Aula já concluída' : canContinue ? 'Pronto para avançar' : 'Conclua com 97%+ para avançar'}</span>
+          {lesson < LESSONS.length - 1
+            ? <button className="primary-btn" disabled={!canContinue} onClick={goNextLesson}>Próxima aula →</button>
+            : canContinue
+              ? <div className="course-complete">Trilha inicial concluída ✓</div>
+              : null}
+        </div>
+      </div>
+
+      {nextLesson >= 0 && nextLesson !== lesson && <button className="recommended-lesson" onClick={goRecommendedLesson}>
+        Continuar da próxima recomendada: <b>{LESSONS[nextLesson].title}</b>
+      </button>}
     </div>
 
     {openGuide && <div className="guide-modal" onMouseDown={e => {
