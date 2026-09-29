@@ -468,27 +468,27 @@ function Learn({ user }) {
   const learnImages = [
     {
       title: 'Posição inicial',
-      src: '/learn/posicao-inicial-ratoturbo.svg',
+      src: '/learn/posicao-inicial-final.svg',
       text: 'Comece pela linha base. F e J servem como referência para posicionar as mãos sem precisar olhar.'
     },
     {
       title: 'Movimento correto',
-      src: '/learn/movimento-dedos-ratoturbo.svg',
+      src: '/learn/movimento-correto-final.svg',
       text: 'O dedo alcança a tecla da região dele e depois volta para a posição inicial. Evite deslocar a mão inteira.'
     },
     {
       title: 'Região de cada dedo',
-      src: '/learn/regioes-dedos-ratoturbo.svg',
+      src: '/learn/mapa-dedos-final.svg',
       text: 'Veja quais teclas ficam sob responsabilidade de cada dedo para diminuir movimentos desnecessários.'
     },
     {
       title: 'Postura correta',
-      src: '/learn/postura-correta-ratoturbo.svg',
+      src: '/learn/postura-correta-final.svg',
       text: 'Mantenha costas apoiadas, ombros relaxados, cotovelos próximos de 90° e punhos neutros.'
     },
     {
       title: 'Erros comuns',
-      src: '/learn/erros-comuns-ratoturbo.svg',
+      src: '/learn/erros-comuns-final.svg',
       text: 'Evite olhar para o teclado, mover a mão inteira, levantar os punhos e manter os dedos rígidos.'
     }
   ]
@@ -623,19 +623,21 @@ function Learn({ user }) {
         <small>{nextLesson === -1 ? 'Trilha inicial concluída.' : `Próxima recomendada: ${LESSONS[nextLesson].title}`}</small>
       </div>
 
-      <div className="learn-image-grid visual-guides">
+      <div className="learn-image-grid visual-guides final-guides">
         {learnImages.map((item,index) => <button
           type="button"
-          className="learn-image-card guide-button"
+          className="learn-image-card guide-button final-guide-card"
           key={item.title}
           onClick={() => setOpenGuide({ ...item, index })}
         >
-          <div className="guide-number">{index + 1}</div>
           <img src={item.src} alt={item.title} />
-          <div>
-            <b>{item.title}</b>
+          <div className="final-guide-footer">
+            <div className="final-guide-meta">
+              <span>GUIA {index + 1}</span>
+              <b>{item.title}</b>
+            </div>
             <p>{item.text}</p>
-            <span className="guide-open-hint">Clique para ampliar</span>
+            <span className="guide-open-hint">Ampliar guia ↗</span>
           </div>
         </button>)}
       </div>
