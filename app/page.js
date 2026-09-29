@@ -336,8 +336,10 @@ function Learn({ user }) {
   const [learningProgress, setLearningProgress] = useState({})
   const [progressMessage, setProgressMessage] = useState('')
   const [openGuide, setOpenGuide] = useState(null)
+  const [practiceMistakes, setPracticeMistakes] = useState([])
+  const [reviewText, setReviewText] = useState('')
 
-  const practiceText = LESSONS[lesson].text
+  const practiceText = reviewText || LESSONS[lesson].text
   const progress = Math.min(100, (practiceInput.length / practiceText.length) * 100)
   const practiceAccuracy = practiceAttempts
     ? Math.max(0, ((practiceAttempts - practiceErrors) / practiceAttempts) * 100).toFixed(1)
@@ -389,8 +391,18 @@ function Learn({ user }) {
   const courseProgress = Math.round((completedCount / LESSONS.length) * 100)
   const nextLesson = LESSONS.findIndex((_, index) => !learningProgress[index]?.completed)
   const currentLessonCompleted = Boolean(learningProgress[lesson]?.completed)
-  const currentLessonFinishedNow = practiceInput.length >= practiceText.length && Number(practiceAccuracy) >= 97
+  const currentLessonFinishedNow = !reviewText && practiceInput.length >= practiceText.length && Number(practiceAccuracy) >= 97
   const canContinue = currentLessonCompleted || currentLessonFinishedNow
+
+  const mistakeSummary = Object.entries(practiceMistakes.reduce((acc, item) => {
+    const key = item.expected || ''
+    if (!key || key === ' ') return acc
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {}))
+    .map(([key, count]) => ({ key, count, finger: fingerForKey(key) }))
+    .sort((a,b) => b.count - a.count)
+    .slice(0,4)
 
   const learnImages = [
     {
@@ -425,6 +437,9 @@ function Learn({ user }) {
     setPracticeInput('')
     setPracticeAttempts(0)
     setPracticeErrors(0)
+    setPracticeMistakes([])
+    setReviewText('')
+    setProgressMessage('')
   }
 
   function goPreviousLesson() {
@@ -441,8 +456,27 @@ function Learn({ user }) {
     if (nextLesson >= 0) changeLesson(nextLesson)
   }
 
+  function startMistakeReview() {
+    if (!mistakeSummary.length) return
+    setReviewText(buildHuntText(mistakeSummary.map(item => item.key)))
+    setPracticeInput('')
+    setPracticeAttempts(0)
+    setPracticeErrors(0)
+    setPracticeMistakes([])
+    setProgressMessage('')
+  }
+
+  function returnToLesson() {
+    setReviewText('')
+    setPracticeInput('')
+    setPracticeAttempts(0)
+    setPracticeErrors(0)
+    setPracticeMistakes([])
+    setProgressMessage('')
+  }
+
   async function saveLessonProgress() {
-    if (!user) return
+    if (!user || reviewText) return
     const accuracy = Number(practiceAccuracy)
     const previous = learningProgress[lesson]
     const completed = practiceInput.length >= practiceText.length && accuracy >= 97
@@ -481,12 +515,23 @@ function Learn({ user }) {
 
       if (added.length) {
         let newErrors = 0
+        const mistakeEvents = []
         for (let offset = 0; offset < added.length; offset++) {
           const position = prefix + offset
-          if (added[offset] !== practiceText[position]) newErrors++
+          if (added[offset] !== practiceText[position]) {
+            newErrors++
+            mistakeEvents.push({
+              position,
+              expected: practiceText[position] ?? '',
+              typed: added[offset] ?? ''
+            })
+          }
         }
         setPracticeAttempts(total => total + added.length)
         setPracticeErrors(total => total + newErrors)
+        if (mistakeEvents.length) {
+          setPracticeMistakes(current => [...current, ...mistakeEvents])
+        }
       }
     }
 
@@ -494,10 +539,10 @@ function Learn({ user }) {
   }
 
   useEffect(() => {
-    if (!user) return
+    if (!user || reviewText) return
     if (practiceInput.length < practiceText.length || practiceAttempts === 0) return
     saveLessonProgress()
-  }, [practiceInput.length, practiceText.length])
+  }, [practiceInput.length, practiceText.length, reviewText])
 
   return <section className="learn-stack">
     <div className="panel">
@@ -552,13 +597,13 @@ function Learn({ user }) {
       <h2>Agora é sua vez</h2>
       <p className="muted small-copy">Veja os cinco guias acima e depois pratique aqui. O foco é repetir o movimento certo até ele começar a ficar natural.</p>
 
-      <div className="lesson-focus-card">
+      <div className={reviewText ? 'lesson-focus-card review' : 'lesson-focus-card'}>
         <div className="lesson-focus-top">
-          <span>Aula {lesson + 1} de {LESSONS.length}</span>
-          <b>{LESSONS[lesson].title}</b>
+          <span>{reviewText ? 'REVISÃO INTELIGENTE' : `Aula ${lesson + 1} de ${LESSONS.length}`}</span>
+          <b>{reviewText ? 'Treino dos seus erros' : LESSONS[lesson].title}</b>
         </div>
-        <p>{LESSONS[lesson].objective}</p>
-        <small>Meta para concluir: finalizar o exercício com pelo menos 97% de precisão.</small>
+        <p>{reviewText ? 'Este mini treino foi montado com as teclas que mais escaparam na sua última tentativa.' : LESSONS[lesson].objective}</p>
+        <small>{reviewText ? 'Quando terminar, volte à aula e tente novamente.' : 'Meta para concluir: finalizar o exercício com pelo menos 97% de precisão.'}</small>
       </div>
 
       <div className="lesson-list learn-lessons">{LESSONS.map((item,index) => {
@@ -621,6 +666,27 @@ function Learn({ user }) {
       />
 
       <div className="practice-progress"><span style={{ width: `${progress}%` }} /></div>
+
+      {practiceInput.length >= practiceText.length && mistakeSummary.length > 0 && <div className="lesson-diagnosis">
+        <div className="lesson-diagnosis-head">
+          <div>
+            <p className="eyebrow">REVISÃO DOS ERROS</p>
+            <h3>Estas teclas mais escaparam</h3>
+          </div>
+          {!reviewText && <button className="primary-btn" onClick={startMistakeReview}>Treinar meus erros</button>}
+        </div>
+        <div className="lesson-error-grid">
+          {mistakeSummary.map(item => <div className="lesson-error-key" key={item.key}>
+            <strong>{item.key.toLocaleUpperCase('pt-BR')}</strong>
+            <div><b>{item.count} {item.count === 1 ? 'erro' : 'erros'}</b><small>{item.finger}</small></div>
+          </div>)}
+        </div>
+      </div>}
+
+      {reviewText && practiceInput.length >= practiceText.length && <div className="review-complete">
+        <div><b>Revisão concluída.</b><span>Agora volte à aula e tente novamente com mais controle.</span></div>
+        <button className="primary-btn" onClick={returnToLesson}>Voltar à aula</button>
+      </div>}
       {!user && <div className="practice-save-note">Entre na sua toca para salvar o progresso das aulas.</div>}
       {progressMessage && <div className="practice-save-note success">{progressMessage}</div>}
 
@@ -634,10 +700,11 @@ function Learn({ user }) {
           setPracticeInput('')
           setPracticeAttempts(0)
           setPracticeErrors(0)
+          setPracticeMistakes([])
         }}>Recomeçar</button>
       </div>
 
-      <div className="lesson-navigation">
+      {!reviewText && <div className="lesson-navigation">
         <button className="secondary-btn" disabled={lesson === 0} onClick={goPreviousLesson}>← Aula anterior</button>
         <div className="lesson-navigation-center">
           <span>{currentLessonCompleted ? 'Aula já concluída' : canContinue ? 'Pronto para avançar' : 'Conclua com 97%+ para avançar'}</span>
@@ -647,9 +714,9 @@ function Learn({ user }) {
               ? <div className="course-complete">Trilha inicial concluída ✓</div>
               : null}
         </div>
-      </div>
+      </div>}
 
-      {nextLesson >= 0 && nextLesson !== lesson && <button className="recommended-lesson" onClick={goRecommendedLesson}>
+      {!reviewText && nextLesson >= 0 && nextLesson !== lesson && <button className="recommended-lesson" onClick={goRecommendedLesson}>
         Continuar da próxima recomendada: <b>{LESSONS[nextLesson].title}</b>
       </button>}
     </div>
