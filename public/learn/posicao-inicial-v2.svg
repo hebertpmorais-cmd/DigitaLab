@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 288">
+<rect width="512" height="288" rx="18" fill="#061525"/>
+<rect x="18" y="18" width="476" height="252" rx="16" fill="#0a2139" stroke="#214568"/>
+<text x="34" y="48" fill="#ffd23f" font-size="11" font-family="Arial" font-weight="700">RATOTURBO • APRENDER</text>
+<text x="34" y="78" fill="#f8fafc" font-size="24" font-family="Arial" font-weight="700">Posição inicial das mãos</text>
+<text x="34" y="98" fill="#afbdd0" font-size="11" font-family="Arial">Comece sempre pela linha base.</text>
+<g transform="translate(66 128)" font-family="Arial" font-weight="700" font-size="18" text-anchor="middle">
+<rect x="0" y="0" width="40" height="40" rx="7" fill="#12365c" stroke="#46a7ff" stroke-width="2"/><text x="20" y="26" fill="#fff">A</text><rect x="48" y="0" width="40" height="40" rx="7" fill="#12365c" stroke="#46a7ff" stroke-width="2"/><text x="68" y="26" fill="#fff">S</text><rect x="96" y="0" width="40" height="40" rx="7" fill="#12365c" stroke="#46a7ff" stroke-width="2"/><text x="116" y="26" fill="#fff">D</text><rect x="144" y="0" width="40" height="40" rx="7" fill="#ff7a00" stroke="#ffd23f" stroke-width="2"/><text x="164" y="26" fill="#fff">F</text><rect x="192" y="0" width="40" height="40" rx="7" fill="#ff7a00" stroke="#ffd23f" stroke-width="2"/><text x="212" y="26" fill="#fff">J</text><rect x="240" y="0" width="40" height="40" rx="7" fill="#12365c" stroke="#46a7ff" stroke-width="2"/><text x="260" y="26" fill="#fff">K</text><rect x="288" y="0" width="40" height="40" rx="7" fill="#12365c" stroke="#46a7ff" stroke-width="2"/><text x="308" y="26" fill="#fff">L</text><rect x="336" y="0" width="40" height="40" rx="7" fill="#12365c" stroke="#46a7ff" stroke-width="2"/><text x="356" y="26" fill="#fff">Ç</text>
+</g>
+<g fill="none" stroke-linecap="round" stroke-width="10">
+<path d="M92 211 C78 196 79 181 91 169" stroke="#46a7ff"/><path d="M139 211 C127 194 130 178 140 169" stroke="#46a7ff"/>
+<path d="M186 211 C176 192 179 177 188 168" stroke="#46a7ff"/><path d="M232 211 C226 191 229 175 238 164" stroke="#ff7a00"/>
+<path d="M280 211 C286 191 283 175 274 164" stroke="#ff7a00"/><path d="M326 211 C336 192 333 177 324 168" stroke="#46a7ff"/>
+<path d="M373 211 C385 194 382 178 372 169" stroke="#46a7ff"/><path d="M420 211 C434 196 433 181 421 169" stroke="#46a7ff"/>
+</g>
+<rect x="151" y="232" width="210" height="24" rx="12" fill="#091d33" stroke="#ffd23f"/>
+<text x="256" y="248" fill="#ffd23f" font-size="10" font-family="Arial" text-anchor="middle">F e J são suas referências</text>
+</svg>
