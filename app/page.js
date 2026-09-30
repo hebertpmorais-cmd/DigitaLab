@@ -204,7 +204,8 @@ function AuthBox({ user, onClose }) {
   </div>
 }
 
-function Trainer({ user, onSaved, initialText }) {
+function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
+  const [targetedText, setTargetedText] = useState(initialText || '')
   const [duration, setDuration] = useState(30)
   const [mode, setMode] = useState('text')
   const [text, setText] = useState(initialText || TEXTS[0])
@@ -226,6 +227,7 @@ function Trainer({ user, onSaved, initialText }) {
 
   useEffect(() => {
     if (initialText) {
+      setTargetedText(initialText)
       setMode('text')
       setText(initialText)
       setInput('')
@@ -287,13 +289,15 @@ function Trainer({ user, onSaved, initialText }) {
     if (finished && user && input.length > 0 && saveStatus === 'idle') saveResult()
   }, [finished, user, input, saveStatus])
 
-  function reset(nextDuration = duration, nextText = generateTrainingText(mode, text)) {
+  function reset(nextDuration = duration, nextText = targetedText || generateTrainingText(mode, text)) {
     setDuration(nextDuration); setElapsed(0); startedAt.current = null; setText(nextText); setInput('')
     setStarted(false); setFinished(false); setSaveStatus('idle'); raceSave.current = { id: null, busy: false }; setAttempts(0); setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
   }
 
   function changeMode(nextMode) {
+    setTargetedText('')
+    onLeaveHunt?.()
     setMode(nextMode)
     setText(generateTrainingText(nextMode))
     setInput('')
@@ -356,6 +360,11 @@ function Trainer({ user, onSaved, initialText }) {
       </div>
     </div>
 
+    {targetedText && <div className="save-hint" role="status">
+      <strong>Treino do Modo Caça</strong>
+      <p>Pratique as teclas selecionadas. Trocar a duração ou repetir mantém este exercício. O resultado é registrado no histórico como Texto.</p>
+      <button className="secondary-btn" disabled={started} onClick={() => changeMode('text')}>Voltar aos textos normais</button>
+    </div>}
     {!user && <div className="save-hint">Corra livremente. Entre na sua toca para salvar o rastro e acompanhar sua evolução.</div>}
     <div className="dev-note">
       <b>Nota do projeto:</b>
@@ -373,7 +382,7 @@ function Trainer({ user, onSaved, initialText }) {
     </button>
     <div className="trainer-footer">
       <p>{started ? 'Turbo ligado — mantenha os olhos na tela.' : finished ? 'Corrida finalizada.' : 'Comece a digitar para largar.'}</p>
-      <button className="secondary-btn" onClick={() => reset(duration, generateTrainingText(mode, text))}>Nova corrida</button>
+      <button className="secondary-btn" onClick={() => reset()}>{targetedText ? 'Recomeçar treino' : 'Nova corrida'}</button>
     </div>
     {finished && <div className="result-box">
       <p className="eyebrow">CHEGADA {user && ['saved', 'partial'].includes(saveStatus) ? '• RASTRO SALVO' : ''}</p>
@@ -388,7 +397,7 @@ function Trainer({ user, onSaved, initialText }) {
       </div>
       <div className="result-main"><strong>{stats.wpm}</strong><span>PPM</span></div>
       <p>{stats.accuracy >= 97 ? 'Ótima precisão. Agora tente aumentar o ritmo gradualmente.' : stats.accuracy >= 93 ? 'Bom equilíbrio. Tente reduzir os erros antes de acelerar.' : 'Priorize a precisão no próximo treino e diminua um pouco o ritmo.'}</p>
-      <button className="primary-btn" onClick={() => reset(duration, generateTrainingText(mode, text))}>Correr novamente</button>
+      <button className="primary-btn" onClick={() => reset()}>{targetedText ? 'Repetir treino' : 'Correr novamente'}</button>
     </div>}
   </section>
 }
@@ -1369,15 +1378,15 @@ export default function Home() {
 
   useEffect(() => {
     supabase?.auth.getUser().then(({ data }) => setUser(data.user || null))
-    const { data } = supabase?.auth.onAuthStateChange((_event, session) => setUser(session?.user || null)) || { data: null }
+    const { data } = supabase?.auth.onAuthStateChange((_event, session) => { setUser(session?.user || null); if (_event === 'SIGNED_OUT') setHuntText('') }) || { data: null }
     return () => data?.subscription?.unsubscribe()
   }, [])
 
   return <main>
     <header className="topbar">
-      <button className="brand" onClick={() => setTab('treinar')}><span className="rat-mark">R</span><strong>Rato</strong><em>Turbo</em></button>
+      <button className="brand" onClick={() => { setHuntText(''); setTab('treinar') }}><span className="rat-mark">R</span><strong>Rato</strong><em>Turbo</em></button>
       <nav>
-        <button className={tab === 'treinar' ? 'nav-active' : ''} onClick={() => setTab('treinar')}>Corrida</button>
+        <button className={tab === 'treinar' ? 'nav-active' : ''} onClick={() => { setHuntText(''); setTab('treinar') }}>Corrida</button>
         <button className={tab === 'aprender' ? 'nav-active' : ''} onClick={() => setTab('aprender')}>Aprender</button>
         <button className={tab === 'estatisticas' ? 'nav-active' : ''} onClick={() => setTab('estatisticas')}>Desempenho</button>
         <button className={tab === 'caca' ? 'nav-active' : ''} onClick={() => setTab('caca')}>Modo Caça</button>
@@ -1393,14 +1402,14 @@ export default function Home() {
       </section>
 
       <div className="tabs-mobile">
-        <button className={tab === 'treinar' ? 'active' : ''} onClick={() => setTab('treinar')}>Corrida</button>
+        <button className={tab === 'treinar' ? 'active' : ''} onClick={() => { setHuntText(''); setTab('treinar') }}>Corrida</button>
         <button className={tab === 'aprender' ? 'active' : ''} onClick={() => setTab('aprender')}>Aprender</button>
         <button className={tab === 'estatisticas' ? 'active' : ''} onClick={() => setTab('estatisticas')}>Rastro</button>
         <button className={tab === 'caca' ? 'active' : ''} onClick={() => setTab('caca')}>Caça</button>
         <button onClick={() => setAuthOpen(true)}>{user ? 'Toca' : 'Entrar'}</button>
       </div>
 
-      {tab === 'treinar' && <Trainer key={user?.id || 'guest'} user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
+      {tab === 'treinar' && <Trainer key={user?.id || 'guest'} user={user} initialText={huntText} onLeaveHunt={() => setHuntText('')} onSaved={() => setRefreshKey(k => k+1)} />}
       {tab === 'aprender' && <Learn key={user?.id || 'guest'} user={user} />}
       {tab === 'estatisticas' && <Dashboard key={user?.id || 'guest'} user={user} refreshKey={refreshKey} />}
       {tab === 'caca' && <HuntMode key={user?.id || 'guest'} user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
