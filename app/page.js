@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { persistRace } from '../lib/race-save.mjs'
 import { TEXTS } from '../lib/race-texts'
 import { measureEdit, exerciseResult, isCourseComplete } from '../lib/learning.mjs'
 
@@ -209,7 +210,8 @@ function Trainer({ user, onSaved, initialText }) {
   const [timeLeft, setTimeLeft] = useState(30)
   const [started, setStarted] = useState(false)
   const [finished, setFinished] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saveStatus, setSaveStatus] = useState('idle')
+  const raceSave = useRef({ id: null, busy: false })
   const [attempts, setAttempts] = useState(0)
   const [errorEvents, setErrorEvents] = useState([])
   const inputRef = useRef(null)
@@ -227,7 +229,7 @@ function Trainer({ user, onSaved, initialText }) {
       setTimeLeft(duration)
       setStarted(false)
       setFinished(false)
-      setSaved(false)
+      setSaveStatus('idle'); raceSave.current = { id: null, busy: false }
       setAttempts(0)
       setErrorEvents([])
     }
@@ -244,11 +246,15 @@ function Trainer({ user, onSaved, initialText }) {
     if (input.length >= text.length && started) { setFinished(true); setStarted(false) }
   }, [input, text, started])
 
-  useEffect(() => {
-    if (!finished || !user || saved || input.length === 0) return
-    async function saveResult() {
-      setSaved(true)
-      const { data, error } = await supabase.from('typing_sessions').insert({
+  async function saveResult() {
+    const attempt = raceSave.current
+    if (!user || attempt.busy || ['saved', 'partial'].includes(saveStatus)) return
+    attempt.busy = true
+    attempt.id ||= crypto.randomUUID()
+    setSaveStatus('saving')
+    try {
+      const result = await persistRace(supabase, {
+        id: attempt.id,
         user_id: user.id,
         duration_seconds: Math.max(1, elapsed),
         mode,
@@ -258,26 +264,23 @@ function Trainer({ user, onSaved, initialText }) {
         errors: stats.errors,
         typed_chars: stats.typed,
         correct_chars: stats.correct
-      }).select('id').single()
-
-      if (!error && data && errorEvents.length > 0) {
-        const rows = errorEvents.map(item => ({
-          session_id: data.id,
-          user_id: user.id,
-          position: item.position,
-          expected_char: item.expected,
-          typed_char: item.typed
-        }))
-        await supabase.from('typing_errors').insert(rows)
-      }
-      if (!error) onSaved()
+      }, errorEvents)
+      if (raceSave.current === attempt) setSaveStatus(result)
+      onSaved()
+    } catch {
+      if (raceSave.current === attempt) setSaveStatus('error')
+    } finally {
+      attempt.busy = false
     }
-    saveResult()
-  }, [finished, user, saved, input, text, elapsed, stats, errorEvents, mode, onSaved])
+  }
+
+  useEffect(() => {
+    if (finished && user && input.length > 0 && saveStatus === 'idle') saveResult()
+  }, [finished, user, input, saveStatus])
 
   function reset(nextDuration = duration, nextText = generateTrainingText(mode, text)) {
     setDuration(nextDuration); setTimeLeft(nextDuration); setText(nextText); setInput('')
-    setStarted(false); setFinished(false); setSaved(false); setAttempts(0); setErrorEvents([])
+    setStarted(false); setFinished(false); setSaveStatus('idle'); raceSave.current = { id: null, busy: false }; setAttempts(0); setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
   }
 
@@ -288,7 +291,7 @@ function Trainer({ user, onSaved, initialText }) {
     setTimeLeft(duration)
     setStarted(false)
     setFinished(false)
-    setSaved(false)
+    setSaveStatus('idle'); raceSave.current = { id: null, busy: false }
     setAttempts(0)
     setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
@@ -376,7 +379,16 @@ function Trainer({ user, onSaved, initialText }) {
       <button className="secondary-btn" onClick={() => reset(duration, generateTrainingText(mode, text))}>Nova corrida</button>
     </div>
     {finished && <div className="result-box">
-      <p className="eyebrow">CHEGADA {user && saved ? '• RASTRO SALVO' : ''}</p>
+      <p className="eyebrow">CHEGADA {user && ['saved', 'partial'].includes(saveStatus) ? '• RASTRO SALVO' : ''}</p>
+      <div role="status" aria-live="polite">
+        {user && saveStatus === 'saving' && <p>Salvando sua corrida…</p>}
+        {user && saveStatus === 'error' && <>
+          <p>Não foi possível confirmar o salvamento. Tente novamente antes de sair ou iniciar outra corrida.</p>
+          <button className="secondary-btn" onClick={saveResult}>Tentar salvar novamente</button>
+        </>}
+        {user && saveStatus === 'partial' && <p>Resultado salvo no histórico, mas os detalhes das teclas erradas não foram confirmados.</p>}
+        {!user && <p>Você correu como visitante. Este resultado não foi salvo no histórico.</p>}
+      </div>
       <div className="result-main"><strong>{stats.wpm}</strong><span>PPM</span></div>
       <p>{stats.accuracy >= 97 ? 'Ótima precisão. Agora tente aumentar o ritmo gradualmente.' : stats.accuracy >= 93 ? 'Bom equilíbrio. Tente reduzir os erros antes de acelerar.' : 'Priorize a precisão no próximo treino e diminua um pouco o ritmo.'}</p>
       <button className="primary-btn" onClick={() => reset(duration, generateTrainingText(mode, text))}>Correr novamente</button>
@@ -1332,7 +1344,7 @@ export default function Home() {
         <button onClick={() => setAuthOpen(true)}>{user ? 'Toca' : 'Entrar'}</button>
       </div>
 
-      {tab === 'treinar' && <Trainer user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
+      {tab === 'treinar' && <Trainer key={user?.id || 'guest'} user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
       {tab === 'aprender' && <Learn key={user?.id || 'guest'} user={user} />}
       {tab === 'estatisticas' && <Dashboard key={user?.id || 'guest'} user={user} refreshKey={refreshKey} />}
       {tab === 'caca' && <HuntMode user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
