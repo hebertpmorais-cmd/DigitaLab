@@ -46,7 +46,7 @@ const MODE_WORDS = [
   'resultado','treino','acerto','natural','tempo','linha','base','técnica'
 ]
 
-function generateTrainingText(mode = 'text', previousText = '') {
+function generateTrainingText(mode = 'text', previousText = '', recent = []) {
   if (mode === 'words') {
     return Array.from({ length: 24 }, (_, i) => MODE_WORDS[(i * 7 + Math.floor(Math.random() * MODE_WORDS.length)) % MODE_WORDS.length]).join(' ')
   }
@@ -60,7 +60,8 @@ function generateTrainingText(mode = 'text', previousText = '') {
     return Array.from({ length: 5 }, (_, i) => groups[(i + Math.floor(Math.random() * groups.length)) % groups.length]).join('   ')
   }
 
-  const choices = TEXTS.filter(item => item !== previousText)
+  const unseen = TEXTS.filter(item => item !== previousText && !recent.some(entry => entry.text === item))
+  const choices = unseen.length ? unseen : TEXTS.filter(item => item !== previousText)
   return choices[Math.floor(Math.random() * choices.length)]
 }
 
@@ -279,6 +280,35 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
     inputRef.current?.focus()
   }
 
+  const [recentTexts, setRecentTexts] = useState([])
+  const [textsReady, setTextsReady] = useState(false)
+  useEffect(() => {
+    let recent = []
+    try {
+      const stored = JSON.parse(localStorage.getItem('ratoturbo-recent-texts') || '[]')
+      if (Array.isArray(stored)) recent = stored.filter(item => item && typeof item.text === 'string' && item.text.length > 0 && item.text.length <= 5000 && TRAINING_MODES.some(mode => mode.id === item.mode)).slice(0, 10)
+    } catch {}
+    setRecentTexts(recent)
+    if (!initialText) setText(generateTrainingText('text', '', recent))
+    setTextsReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!textsReady || targetedText) return
+    setRecentTexts(current => {
+      const next = [{ text, mode }, ...current.filter(item => item.text !== text)].slice(0, 10)
+      try { localStorage.setItem('ratoturbo-recent-texts', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [text, mode, targetedText, textsReady])
+
+  function repeatText(item) {
+    setTargetedText('')
+    onLeaveHunt?.()
+    setMode(item.mode)
+    reset(duration, item.text)
+  }
+
   const [targetedText, setTargetedText] = useState(initialText || '')
   const [duration, setDuration] = useState(30)
   const [mode, setMode] = useState('text')
@@ -363,7 +393,7 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
     if (finished && user && input.length > 0 && saveStatus === 'idle') saveResult()
   }, [finished, user, input, saveStatus])
 
-  function reset(nextDuration = duration, nextText = targetedText || generateTrainingText(mode, text)) {
+  function reset(nextDuration = duration, nextText = targetedText || generateTrainingText(mode, text, recentTexts)) {
     setDuration(nextDuration); setElapsed(0); startedAt.current = null; setText(nextText); setInput('')
     setStarted(false); setFinished(false); setSaveStatus('idle'); raceSave.current = { id: null, busy: false }; setAttempts(0); setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
@@ -373,7 +403,7 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
     setTargetedText('')
     onLeaveHunt?.()
     setMode(nextMode)
-    setText(generateTrainingText(nextMode))
+    setText(generateTrainingText(nextMode, text, recentTexts))
     setInput('')
     setElapsed(0); startedAt.current = null
     setStarted(false)
@@ -434,6 +464,18 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
       </div>
     </div>
 
+    <details className="recent-race-texts">
+      <summary>Repetir textos recentes</summary>
+      <p className="muted">Os últimos 10 textos exibidos ficam guardados neste navegador. Repetir inicia uma nova corrida.</p>
+      <div className="recent-race-list">
+        {recentTexts.map((item, index) => <button type="button" className="secondary-btn" key={item.text} disabled={started} onClick={() => repeatText(item)}>
+          <strong>{index === 0 ? 'Mais recente' : `Texto ${index + 1}`} · {TRAINING_MODES.find(mode => mode.id === item.mode)?.label}</strong>
+          <span>{item.text}</span>
+          <small>Repetir este texto</small>
+        </button>)}
+      </div>
+      {started && <p className="muted">Conclua a corrida para escolher um texto recente.</p>}
+    </details>
     {targetedText && <div className="save-hint" role="status">
       <strong>Treino do Modo Caça</strong>
       <p>Pratique as teclas selecionadas. Trocar a duração ou repetir mantém este exercício. O resultado é registrado no histórico como Texto.</p>
