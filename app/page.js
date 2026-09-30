@@ -881,8 +881,6 @@ function HuntMode({ user, onTrain }) {
 
   if (loadError) return <section className="panel"><p role="alert">Não foi possível analisar suas teclas agora.</p><button className="secondary-btn" onClick={() => setReload(value => value + 1)}>Tentar novamente</button></section>
 
-  if (loadError) return <section className="panel"><p role="alert">Não foi possível analisar seus erros.</p><button className="secondary-btn" onClick={() => setReload(value => value + 1)}>Tentar novamente</button></section>
-
   if (!errors.length) return <section className="panel hunt-empty">
     <p className="eyebrow">MODO CAÇA</p>
     <h2>Ainda não encontrei uma tecla problemática</h2>
@@ -898,7 +896,7 @@ function HuntMode({ user, onTrain }) {
     <div className="panel">
       <p className="eyebrow">MODO CAÇA</p>
       <h2>Encontrei onde você mais tropeça</h2>
-      <p className="muted small-copy">Analisei até 300 erros recentes das suas corridas, sem contar espaços. O ranking mostra a quantidade de erros por tecla, não uma taxa de dificuldade.</p>
+      <p className="muted small-copy">Analisei até 300 erros recentes das suas corridas, incluindo espaços. O ranking mostra a quantidade de erros por tecla, não uma taxa de dificuldade.</p>
 
       <div className="hunt-summary">
         <div className="hunt-main">
@@ -1013,31 +1011,6 @@ function Dashboard({ user, refreshKey }) {
   const [historyMode, setHistoryMode] = useState('all')
   const [historyDays, setHistoryDays] = useState('all')
   const [historyPage, setHistoryPage] = useState(1)
-  const [confirmClear, setConfirmClear] = useState(false)
-  const [clearing, setClearing] = useState(false)
-  const [clearMessage, setClearMessage] = useState('')
-  const clearLock = useRef(false)
-
-  async function clearHistory() {
-    if (!user || !confirmClear || clearLock.current) return
-    clearLock.current = true
-    setClearing(true)
-    setClearMessage('')
-    try {
-      const { error } = await supabase.from('typing_sessions').delete().eq('user_id', user.id)
-      if (error) throw error
-      setSessions([])
-      setHistoryPage(1)
-      setConfirmClear(false)
-      setClearMessage('Histórico apagado. As metas e as aulas concluídas foram mantidas.')
-      setReload(value => value + 1)
-    } catch {
-      setClearMessage('Não foi possível confirmar a limpeza. Tente novamente.')
-    } finally {
-      clearLock.current = false
-      setClearing(false)
-    }
-  }
   const [clearOpen, setClearOpen] = useState(false)
   const [clearText, setClearText] = useState('')
   const [clearing, setClearing] = useState(false)
@@ -1350,14 +1323,6 @@ function Dashboard({ user, refreshKey }) {
     <div className="panel">
       <div className="history-actions">
         <p className="eyebrow">RASTRO</p>
-      <button className="secondary-btn" disabled={clearing || sessions.length === 0} onClick={() => { setConfirmClear(true); setClearMessage('') }}>Limpar histórico</button>
-      {confirmClear && <div className="panel" role="region" aria-label="Confirmar limpeza do histórico">
-        <h3>Apagar todo o histórico?</h3>
-        <p>Isso apaga permanentemente todas as suas corridas e os erros usados no Modo Caça, inclusive os que não aparecem nos filtros. Estatísticas, XP e conquistas das corridas serão reiniciados. Suas metas e aulas concluídas serão mantidas.</p>
-        <button className="secondary-btn" disabled={clearing} onClick={() => setConfirmClear(false)}>Cancelar</button>{' '}
-        <button className="primary-btn" disabled={clearing} onClick={clearHistory}>{clearing ? 'Apagando...' : 'Apagar meu histórico'}</button>
-      </div>}
-      {clearMessage && <p role="status">{clearMessage}</p>}
         <button className="secondary-btn" disabled={!sessions.length || clearing} onClick={() => { setClearOpen(true); setClearText(''); setClearMessage('') }}>Limpar histórico</button>
       </div>
       {clearOpen && <form className="clear-history" onSubmit={clearHistory} aria-label="Confirmar limpeza do histórico">
