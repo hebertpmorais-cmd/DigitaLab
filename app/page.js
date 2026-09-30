@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { measureEdit, exerciseResult, isCourseComplete } from '../lib/learning.mjs'
 
 const TEXTS = [
   'A prática constante transforma precisão em velocidade. Mantenha os olhos na tela e deixe os dedos encontrarem as teclas com naturalidade.',
@@ -399,12 +400,17 @@ function Learn({ user }) {
   const [openGuide, setOpenGuide] = useState(null)
   const [practiceMistakes, setPracticeMistakes] = useState([])
   const [reviewText, setReviewText] = useState('')
+  const [loadStatus, setLoadStatus] = useState(user ? 'loading' : 'ready')
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [saveStatus, setSaveStatus] = useState('idle')
+  const saveInFlight = useRef(false)
+  const resultHandled = useRef(false)
 
   const practiceText = reviewText || LESSONS[lesson].text
   const progress = Math.min(100, (practiceInput.length / practiceText.length) * 100)
-  const practiceAccuracy = practiceAttempts
-    ? Math.max(0, ((practiceAttempts - practiceErrors) / practiceAttempts) * 100).toFixed(1)
-    : '100.0'
+  const result = exerciseResult(practiceInput, practiceText, practiceAttempts, practiceErrors)
+  const practiceAccuracy = result.accuracy.toFixed(1)
+  const navigationBusy = loadStatus !== 'ready' || saveStatus === 'saving' || saveStatus === 'error'
 
   const practiceKeyboardRows = [
     ['Q','W','E','R','T','Y','U','I','O','P'],
@@ -433,26 +439,35 @@ function Learn({ user }) {
         : 'Tecla especial'
 
   useEffect(() => {
-    if (!user) {
-      setLearningProgress({})
-      return
-    }
-
-    supabase.from('learning_progress')
-      .select('lesson_index, best_accuracy, completed, completed_at')
-      .order('lesson_index', { ascending: true })
-      .then(({ data }) => {
+    let cancelled = false
+    if (!user) return
+    setLoadStatus('loading')
+    async function load() {
+      try {
+        if (!supabase) throw new Error('unavailable')
+        const { data, error } = await supabase.from('learning_progress')
+          .select('lesson_index, best_accuracy, completed, completed_at')
+          .eq('user_id', user.id)
+          .order('lesson_index', { ascending: true })
+        if (error) throw error
+        if (cancelled) return
         const mapped = {}
         for (const item of data || []) mapped[item.lesson_index] = item
         setLearningProgress(mapped)
-      })
-  }, [user])
+        setLoadStatus('ready')
+      } catch {
+        if (!cancelled) setLoadStatus('error')
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [user?.id, loadAttempt])
 
   const completedCount = LESSONS.filter((_, index) => learningProgress[index]?.completed).length
   const courseProgress = Math.round((completedCount / LESSONS.length) * 100)
   const nextLesson = LESSONS.findIndex((_, index) => !learningProgress[index]?.completed)
   const currentLessonCompleted = Boolean(learningProgress[lesson]?.completed)
-  const currentLessonFinishedNow = !reviewText && practiceInput.length >= practiceText.length && Number(practiceAccuracy) >= 97
+  const currentLessonFinishedNow = !reviewText && result.passed
   const canContinue = currentLessonCompleted || currentLessonFinishedNow
 
   const mistakeSummary = Object.entries(practiceMistakes.reduce((acc, item) => {
@@ -494,6 +509,9 @@ function Learn({ user }) {
   ]
 
   function changeLesson(index) {
+    if (navigationBusy) return
+    resultHandled.current = false
+    setSaveStatus('idle')
     setLesson(index)
     setPracticeInput('')
     setPracticeAttempts(0)
@@ -509,7 +527,7 @@ function Learn({ user }) {
   }
 
   function goNextLesson() {
-    if (lesson >= LESSONS.length - 1) return
+    if (lesson >= LESSONS.length - 1 || !canContinue || navigationBusy) return
     changeLesson(lesson + 1)
   }
 
@@ -518,7 +536,9 @@ function Learn({ user }) {
   }
 
   function startMistakeReview() {
-    if (!mistakeSummary.length) return
+    if (!mistakeSummary.length || navigationBusy) return
+    resultHandled.current = false
+    setSaveStatus('idle')
     setReviewText(buildHuntText(mistakeSummary.map(item => item.key)))
     setPracticeInput('')
     setPracticeAttempts(0)
@@ -528,6 +548,8 @@ function Learn({ user }) {
   }
 
   function returnToLesson() {
+    resultHandled.current = false
+    setSaveStatus('idle')
     setReviewText('')
     setPracticeInput('')
     setPracticeAttempts(0)
@@ -537,73 +559,57 @@ function Learn({ user }) {
   }
 
   async function saveLessonProgress() {
-    if (!user || reviewText) return
-    const accuracy = Number(practiceAccuracy)
+    if (reviewText || !result.finished || loadStatus !== 'ready' || saveInFlight.current) return
     const previous = learningProgress[lesson]
-    const completed = practiceInput.length >= practiceText.length && accuracy >= 97
-    const bestAccuracy = Math.max(Number(previous?.best_accuracy || 0), accuracy)
-
     const payload = {
-      user_id: user.id,
+      ...(user ? { user_id: user.id } : {}),
       lesson_index: lesson,
-      best_accuracy: bestAccuracy,
-      completed: previous?.completed || completed,
-      completed_at: previous?.completed_at || (completed ? new Date().toISOString() : null),
+      best_accuracy: Math.max(Number(previous?.best_accuracy || 0), result.accuracy),
+      completed: Boolean(previous?.completed || result.passed),
+      completed_at: previous?.completed_at || (result.passed ? new Date().toISOString() : null),
       updated_at: new Date().toISOString()
     }
-
-    const { error } = await supabase.from('learning_progress').upsert(payload)
-
-    if (!error) {
+    if (!user) {
       setLearningProgress(current => ({ ...current, [lesson]: payload }))
-      setProgressMessage(completed ? 'Aula concluída e progresso salvo.' : 'Resultado salvo. Tente chegar a 97% para concluir a aula.')
+      setProgressMessage(result.passed ? 'Aula concluída nesta sessão. Entre para salvar as próximas aulas na sua conta.' : 'Tente novamente para chegar a 97% de precisão.')
+      return
+    }
+    saveInFlight.current = true
+    setSaveStatus('saving')
+    setProgressMessage('Salvando seu resultado...')
+    try {
+      if (!supabase) throw new Error('unavailable')
+      const { data, error } = await supabase.from('learning_progress')
+        .upsert(payload, { onConflict: 'user_id,lesson_index' })
+        .select('lesson_index, best_accuracy, completed, completed_at')
+        .single()
+      if (error || !data) throw error || new Error('missing result')
+      setLearningProgress(current => ({ ...current, [lesson]: data }))
+      setSaveStatus('saved')
+      setProgressMessage(result.passed ? 'Aula concluída e progresso salvo.' : 'Resultado salvo. Tente chegar a 97% para concluir a aula.')
+    } catch {
+      setSaveStatus('error')
+      setProgressMessage('Não foi possível salvar. Seu resultado continua nesta tela; tente novamente antes de sair.')
+    } finally {
+      saveInFlight.current = false
     }
   }
 
   function handlePractice(e) {
+    if (result.finished || loadStatus !== 'ready') return
     const value = e.target.value.slice(0, practiceText.length)
-
-    if (value.length > practiceInput.length) {
-      let prefix = 0
-      while (
-        prefix < practiceInput.length &&
-        prefix < value.length &&
-        practiceInput[prefix] === value[prefix]
-      ) prefix++
-
-      const addedCount = value.length - practiceInput.length
-      const added = value.slice(prefix, prefix + addedCount)
-
-      if (added.length) {
-        let newErrors = 0
-        const mistakeEvents = []
-        for (let offset = 0; offset < added.length; offset++) {
-          const position = prefix + offset
-          if (added[offset] !== practiceText[position]) {
-            newErrors++
-            mistakeEvents.push({
-              position,
-              expected: practiceText[position] ?? '',
-              typed: added[offset] ?? ''
-            })
-          }
-        }
-        setPracticeAttempts(total => total + added.length)
-        setPracticeErrors(total => total + newErrors)
-        if (mistakeEvents.length) {
-          setPracticeMistakes(current => [...current, ...mistakeEvents])
-        }
-      }
-    }
-
+    const edit = measureEdit(practiceInput, value, practiceText)
+    setPracticeAttempts(total => total + edit.attempts)
+    setPracticeErrors(total => total + edit.errors)
+    if (edit.mistakes.length) setPracticeMistakes(current => [...current, ...edit.mistakes])
     setPracticeInput(value)
   }
 
   useEffect(() => {
-    if (!user || reviewText) return
-    if (practiceInput.length < practiceText.length || practiceAttempts === 0) return
+    if (reviewText || !result.finished || loadStatus !== 'ready' || resultHandled.current) return
+    resultHandled.current = true
     saveLessonProgress()
-  }, [practiceInput.length, practiceText.length, reviewText])
+  }, [result.finished, reviewText, loadStatus])
 
   return <section className="learn-stack">
     <div className="panel">
@@ -611,6 +617,11 @@ function Learn({ user }) {
       <h2>Primeiro entenda onde cada dedo deve ficar</h2>
       <p className="muted">Antes de tentar ganhar velocidade, vale criar o hábito de voltar sempre para a linha base e movimentar só o necessário.</p>
 
+      {loadStatus === 'loading' && <p role="status">Carregando seu progresso...</p>}
+      {loadStatus === 'error' && <div role="alert" className="practice-save-note">
+        Não foi possível carregar seu progresso.
+        <button className="secondary-btn" onClick={() => setLoadAttempt(value => value + 1)}>Tentar carregar novamente</button>
+      </div>}
       <div className="learning-path">
         <div className="learning-path-head">
           <div>
@@ -672,7 +683,7 @@ function Learn({ user }) {
       <div className="lesson-list learn-lessons">{LESSONS.map((item,index) => {
         const progressItem = learningProgress[index]
         const classes = [lesson === index ? 'lesson active' : 'lesson', progressItem?.completed ? 'completed' : ''].join(' ')
-        return <button onClick={() => changeLesson(index)} className={classes} key={item.title}>
+        return <button disabled={navigationBusy} onClick={() => changeLesson(index)} className={classes} key={item.title}>
           <span>{progressItem?.completed ? '✓' : index+1}</span>
           <div>
             <b>{item.title}</b>
@@ -723,6 +734,11 @@ function Learn({ user }) {
         value={practiceInput}
         onChange={handlePractice}
         onPaste={e => e.preventDefault()}
+        onDrop={e => e.preventDefault()}
+        readOnly={result.finished || loadStatus !== 'ready'}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
         spellCheck={false}
         placeholder="Clique aqui e comece a digitar o exercício..."
         aria-label="Exercício prático de digitação"
@@ -736,7 +752,7 @@ function Learn({ user }) {
             <p className="eyebrow">REVISÃO DOS ERROS</p>
             <h3>Estas teclas mais escaparam</h3>
           </div>
-          {!reviewText && <button className="primary-btn" onClick={startMistakeReview}>Treinar meus erros</button>}
+          {!reviewText && <button className="primary-btn" disabled={navigationBusy} onClick={startMistakeReview}>Treinar meus erros</button>}
         </div>
         <div className="lesson-error-grid">
           {mistakeSummary.map(item => <div className="lesson-error-key" key={item.key}>
@@ -751,15 +767,21 @@ function Learn({ user }) {
         <button className="primary-btn" onClick={returnToLesson}>Voltar à aula</button>
       </div>}
       {!user && <div className="practice-save-note">Entre na sua toca para salvar o progresso das aulas.</div>}
-      {progressMessage && <div className="practice-save-note success">{progressMessage}</div>}
+      {progressMessage && <div role={saveStatus === 'error' ? 'alert' : 'status'} className="practice-save-note">
+        {progressMessage}
+        {saveStatus === 'error' && <button className="secondary-btn" onClick={saveLessonProgress}>Tentar salvar novamente</button>}
+      </div>}
 
       <div className="practice-actions">
         <p>{practiceInput.length >= practiceText.length
-          ? Number(practiceAccuracy) >= 97
+          ? result.passed
             ? 'Aula concluída com a precisão necessária.'
             : 'Exercício finalizado. Repita para chegar a 97% de precisão.'
           : 'Digite com calma e tente não olhar para o teclado.'}</p>
-        <button className="secondary-btn" onClick={() => {
+        <button className="secondary-btn" disabled={saveStatus === 'saving'} onClick={() => {
+          resultHandled.current = false
+          setSaveStatus('idle')
+          setProgressMessage('')
           setPracticeInput('')
           setPracticeAttempts(0)
           setPracticeErrors(0)
@@ -768,18 +790,18 @@ function Learn({ user }) {
       </div>
 
       {!reviewText && <div className="lesson-navigation">
-        <button className="secondary-btn" disabled={lesson === 0} onClick={goPreviousLesson}>← Aula anterior</button>
+        <button className="secondary-btn" disabled={lesson === 0 || navigationBusy} onClick={goPreviousLesson}>← Aula anterior</button>
         <div className="lesson-navigation-center">
           <span>{currentLessonCompleted ? 'Aula já concluída' : canContinue ? 'Pronto para avançar' : 'Conclua com 97%+ para avançar'}</span>
           {lesson < LESSONS.length - 1
-            ? <button className="primary-btn" disabled={!canContinue} onClick={goNextLesson}>Próxima aula →</button>
-            : canContinue
+            ? <button className="primary-btn" disabled={!canContinue || navigationBusy} onClick={goNextLesson}>Próxima aula →</button>
+            : isCourseComplete(learningProgress, LESSONS.length)
               ? <div className="course-complete">Trilha inicial concluída ✓</div>
               : null}
         </div>
       </div>}
 
-      {!reviewText && nextLesson >= 0 && nextLesson !== lesson && <button className="recommended-lesson" onClick={goRecommendedLesson}>
+      {!reviewText && nextLesson >= 0 && nextLesson !== lesson && <button className="recommended-lesson" disabled={navigationBusy} onClick={goRecommendedLesson}>
         Continuar da próxima recomendada: <b>{LESSONS[nextLesson].title}</b>
       </button>}
     </div>
@@ -1264,7 +1286,7 @@ export default function Home() {
       </div>
 
       {tab === 'treinar' && <Trainer user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
-      {tab === 'aprender' && <Learn user={user} />}
+      {tab === 'aprender' && <Learn key={user?.id || 'guest'} user={user} />}
       {tab === 'estatisticas' && <Dashboard user={user} refreshKey={refreshKey} />}
       {tab === 'caca' && <HuntMode user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
 
