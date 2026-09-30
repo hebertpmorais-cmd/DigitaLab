@@ -12,6 +12,18 @@ const LESSONS = [
   { title: 'Linha superior', keys: 'qwerty uiop', objective: 'Alcançar a linha superior sem deslocar a mão inteira.', text: 'queiro teto tipo pior quero perto toque equipe roteiro' },
   { title: 'Linha inferior', keys: 'zxcvb nm', objective: 'Praticar a descida dos dedos mantendo os punhos neutros.', text: 'zona caixa vivo banco nome cinema vinho combo' },
   { title: 'Palavras', keys: 'alfabeto completo', objective: 'Juntar as três linhas e manter precisão em palavras completas.', text: 'trabalho estudo foco teclado prática ritmo precisão velocidade' },
+  { title: 'Alternância das mãos', keys: 'ritmo e coordenação', objective: 'Alternar as mãos com movimentos curtos e voltar à linha base.', text: 'fala sala lado laço cada dado casa lago gato fato vida fila lado sala fala casa' },
+  { title: 'Letras maiúsculas', keys: 'Shift e início de frases', objective: 'Usar Shift para iniciar nomes e frases sem perder a posição das mãos.', text: 'Ana e Bruno estudam juntos. Carlos mora em Recife. Diana visita Petrolina. Eu treino todos os dias.' },
+  { title: 'Acentos e cedilha', keys: 'á é í ó ú â ê ô ã õ ç', objective: 'Praticar acentos e cedilha com atenção a cada caractere.', text: 'café água avó avô saída saúde lâmpada você ônibus ação manhã coração atenção açúcar precisão' },
+  { title: 'Vírgulas e pontos', keys: ', . ; :', objective: 'Manter a precisão ao alternar palavras, espaços e pontuação.', text: 'Hoje, pratiquei com calma. Depois, revisei meus erros. Minha meta: manter o ritmo; minha prioridade: acertar.' },
+  { title: 'Perguntas e exclamações', keys: '? ! ( )', objective: 'Combinar maiúsculas e sinais em frases curtas.', text: 'Tudo pronto? Vamos começar! Qual é a próxima tecla? Respire (sem pressa) e continue. Muito bem!' },
+  { title: 'Sequências numéricas', keys: '0 a 9', objective: 'Digitar números com calma e conferir a ordem dos algarismos.', text: '123 456 789 012 135 246 357 468 579 680 2026 1048 5730 9261' },
+  { title: 'Datas e horários', keys: '/ : e números', objective: 'Praticar informações comuns de agendas e compromissos.', text: 'A reunião será em 15/10/2026, às 08:30. A pausa começa às 10:15. O próximo treino será em 16/10/2026, às 19:45.' },
+  { title: 'Valores e porcentagens', keys: 'R$ , . %', objective: 'Digitar valores e percentuais sem trocar vírgulas, pontos ou símbolos.', text: 'O caderno custa R$ 24,90. A compra total foi R$ 1.250,00. O desconto é de 10%. A meta de precisão é 97%.' },
+  { title: 'Endereços e símbolos', keys: '@ . - _', objective: 'Praticar combinações usadas em endereços de e-mail e nomes de arquivos.', text: 'contato@example.com equipe.teste@example.org treino_01 resumo-final atividade_02 dados-2026' },
+  { title: 'Teste: mensagem', keys: 'avaliação prática 1', objective: 'Aplicar maiúsculas, acentos e pontuação em uma mensagem completa. Conclua com pelo menos 97% de precisão.', text: 'Olá, Ana! Tudo bem? Amanhã vamos revisar os exercícios às 14:30. Leve suas anotações e escolha três palavras para praticar. Até lá!' },
+  { title: 'Teste: registro de trabalho', keys: 'avaliação prática 2', objective: 'Conferir sua precisão em um registro com números, data e valores. Conclua com pelo menos 97% de precisão.', text: 'Pedido 2048: recebemos 36 unidades em 18/10/2026. O valor total foi R$ 720,00. Após a conferência, separamos 12 unidades para entrega às 16:45.' },
+  { title: 'Teste: texto completo', keys: 'avaliação prática 3', objective: 'Combinar as habilidades da trilha em um texto maior. Priorize a precisão, sem limite de tempo.', text: 'Aprender a digitar exige atenção, prática e paciência. No início, o mais importante é encontrar cada tecla com o dedo correto. Com o tempo, os movimentos ficam naturais. Faça uma pausa, relaxe os ombros e retome o exercício. Hoje, a meta é alcançar 97% de precisão. Amanhã, observe sua evolução e continue!' },
 ]
 
 const HAND_GROUPS = [
@@ -688,7 +700,7 @@ function Learn({ user }) {
         <small>{reviewText ? 'Quando terminar, volte à aula e tente novamente.' : 'Meta para concluir: finalizar o exercício com pelo menos 97% de precisão.'}</small>
       </div>
 
-      <div className="lesson-list learn-lessons">{LESSONS.map((item,index) => {
+      <div className="lesson-list learn-lessons" aria-label="Escolha uma das 16 atividades">{LESSONS.map((item,index) => {
         const progressItem = learningProgress[index]
         const classes = [lesson === index ? 'lesson active' : 'lesson', progressItem?.completed ? 'completed' : ''].join(' ')
         return <button disabled={navigationBusy} onClick={() => changeLesson(index)} className={classes} key={item.title}>
