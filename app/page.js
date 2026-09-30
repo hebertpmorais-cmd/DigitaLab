@@ -141,7 +141,7 @@ function CharacterText({ text, input }) {
 }
 
 const METRIC_HELP = {
-  Tempo: 'Tempo restante da corrida. A contagem começa na primeira digitação e continua mesmo se você trocar de aba.',
+  Tempo: 'Tempo restante da corrida. Na opção Sem limite, mostra o tempo decorrido e o treino termina ao finalizar o texto. A contagem começa na primeira digitação e continua mesmo se você trocar de aba.',
   PPM: 'Palavras por minuto. Cada grupo de cinco caracteres corretos equivale a uma palavra para calcular sua velocidade.',
   CPM: 'Caracteres corretos por minuto: letras, espaços, números e sinais. O cálculo considera o tempo efetivamente usado.',
   Precisão: 'Percentual de tentativas corretas. Apagar ou corrigir uma letra não elimina o erro anterior.',
@@ -444,8 +444,8 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
   return <section className="panel trainer-panel">
     <div className="panel-head">
       <div><p className="eyebrow">PISTA DE DIGITAÇÃO</p><h2>Aqueça os dedos. Solte o turbo.</h2></div>
-      <div className="duration-group">{[15,30,60].map(sec =>
-        <button key={sec} className={duration === sec ? 'chip active' : 'chip'} onClick={() => reset(sec)}>{sec}s</button>
+      <div className="duration-group">{[15,30,60,null].map(sec =>
+        <button key={sec ?? 'unlimited'} aria-pressed={duration === sec} className={duration === sec ? 'chip active' : 'chip'} onClick={() => reset(sec, text)}>{sec === null ? 'Sem limite' : `${sec}s`}</button>
       )}</div>
     </div>
     <div className="mode-picker">
@@ -486,8 +486,9 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
       <b>Nota do projeto:</b>
       <span>Essa versão ainda está em desenvolvimento. Estou adicionando as funções por etapas e ajustando o que não ficar legal.</span>
     </div>
+    {duration === null && <p className="save-hint">Treino sem limite: digite o texto completo no seu ritmo. O tempo mostra quanto você já treinou.</p>}
     <div className="stats-row">
-      <Stat help label="Tempo" value={timeLeft} suffix="s" /><Stat help label="PPM" value={stats.wpm} />
+      <Stat help label="Tempo" value={duration === null ? Math.floor(elapsed) : timeLeft} suffix="s" /><Stat help label="PPM" value={stats.wpm} />
       <Stat help label="CPM" value={stats.cpm} /><Stat help label="Precisão" value={stats.accuracy} suffix="%" /><Stat help label="Erros" value={stats.errors} />
     </div>
     
