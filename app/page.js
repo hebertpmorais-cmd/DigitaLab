@@ -127,25 +127,21 @@ function CharacterText({ text, input }) {
   })}</div>
 }
 
-function Stat({ label, value, suffix = '' }) {
-  return <div className="stat-card"><span>{label}</span><strong>{value}{suffix}</strong></div>
+const METRIC_HELP = {
+  Tempo: 'Tempo restante da corrida. A contagem começa na primeira digitação e continua mesmo se você trocar de aba.',
+  PPM: 'Palavras por minuto. Cada grupo de cinco caracteres corretos equivale a uma palavra para calcular sua velocidade.',
+  CPM: 'Caracteres corretos por minuto: letras, espaços, números e sinais. O cálculo considera o tempo efetivamente usado.',
+  Precisão: 'Percentual de tentativas corretas. Apagar ou corrigir uma letra não elimina o erro anterior.',
+  Erros: 'Tentativas incorretas durante a corrida, incluindo letras substituídas e erros que você corrigiu depois.'
 }
 
-function MetricsHelp() {
-  return <div className="metrics-help">
-    <button className="metrics-help-trigger" type="button" aria-label="Explicação das medidas">?</button>
-    <div className="metrics-help-popover">
-      <div className="metrics-help-title">
-        <b>O que significam essas medidas?</b>
-        <small>Passei as siglas para português para ficar mais fácil de entender.</small>
-      </div>
-      <div className="metrics-help-grid">
-        <div><strong>PPM</strong><span>Palavras por minuto. É a velocidade aproximada da sua digitação.</span></div>
-        <div><strong>CPM</strong><span>Caracteres por minuto. Conta letras, espaços e outros caracteres digitados corretamente.</span></div>
-        <div><strong>Precisão</strong><span>Porcentagem de tentativas corretas. Erros apagados e corrigidos continuam entrando no cálculo.</span></div>
-        <div><strong>Erros</strong><span>Total de caracteres digitados errado durante a corrida, inclusive os que você apagou e corrigiu depois.</span></div>
-      </div>
-    </div>
+function Stat({ label, value, suffix = '', help = false }) {
+  return <div className={`stat-card${help ? ' stat-with-help' : ''}`}>
+    <span>{label}</span><strong>{value}{suffix}</strong>
+    {help && <details className="stat-help">
+      <summary aria-label={`Entenda ${label}`} title={`Entenda ${label}`}>?</summary>
+      <p>{METRIC_HELP[label]}</p>
+    </details>}
   </div>
 }
 
@@ -371,10 +367,10 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
       <span>Essa versão ainda está em desenvolvimento. Estou adicionando as funções por etapas e ajustando o que não ficar legal.</span>
     </div>
     <div className="stats-row">
-      <Stat label="Tempo" value={timeLeft} suffix="s" /><Stat label="PPM" value={stats.wpm} />
-      <Stat label="CPM" value={stats.cpm} /><Stat label="Precisão" value={stats.accuracy} suffix="%" /><Stat label="Erros" value={stats.errors} />
+      <Stat help label="Tempo" value={timeLeft} suffix="s" /><Stat help label="PPM" value={stats.wpm} />
+      <Stat help label="CPM" value={stats.cpm} /><Stat help label="Precisão" value={stats.accuracy} suffix="%" /><Stat help label="Erros" value={stats.errors} />
     </div>
-    <MetricsHelp />
+    
     <button className="typing-area" onClick={() => inputRef.current?.focus()} type="button">
       <CharacterText text={text} input={input} />
       <textarea ref={inputRef} className="hidden-input" value={input} onChange={handleChange}
@@ -1414,9 +1410,9 @@ export default function Home() {
       {tab === 'estatisticas' && <Dashboard key={user?.id || 'guest'} user={user} refreshKey={refreshKey} />}
       {tab === 'caca' && <HuntMode key={user?.id || 'guest'} user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
 
-      <footer>
-        <span>RatoTurbo · projeto pessoal em desenvolvimento</span>
-        <small>Feito aos poucos.</small>
+      <footer className="site-footer">
+        <div className="footer-brand"><span className="footer-mark" aria-hidden="true">R</span><div><b>RatoTurbo</b><p>Pratique no seu ritmo. Evolua a cada corrida.</p></div></div>
+        <div className="footer-author"><span>Autoria e desenvolvimento</span><strong>Hebert Pereira Morais</strong><small>Projeto pessoal · Feito aos poucos, com dedicação.</small></div>
       </footer>
     </div>
     {authOpen && <AuthBox user={user} onClose={() => setAuthOpen(false)} />}

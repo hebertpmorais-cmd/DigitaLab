@@ -2162,3 +2162,23 @@ footer:before{display:none}
 .clear-history p { margin: 12px 0; line-height: 1.6; }
 .clear-history label { display: grid; gap: 8px; margin: 16px 0; }
 .clear-history input { width: 100%; max-width: 320px; padding: 12px; border: 1px solid #64748b; border-radius: 8px; background: #071827; color: #fff; }
+
+/* Individual metric explanations and project credits. */
+.trainer-panel .stats-row { align-items: start; }
+.stat-with-help { padding-right: 46px; min-height: 88px; }
+.stat-with-help:after { pointer-events: none; }
+.stat-help summary { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; display: grid; place-items: center; list-style: none; border: 1px solid #547392; border-radius: 50%; background: #123451; color: #d9ebff; cursor: pointer; font-size: 14px; font-weight: 700; }
+.stat-help summary::-webkit-details-marker { display: none; }
+.stat-help summary:hover, .stat-help[open] summary { background: #ffe05e; color: #102238; border-color: #ffe05e; }
+.stat-help summary:focus-visible { outline: 3px solid #ff9a4b; outline-offset: 3px; }
+.stat-help p { margin: 14px -30px 0 0; padding-top: 12px; border-top: 1px solid #304960; color: #c4d3e3; font-size: 12px; line-height: 1.65; }
+.site-footer { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 24px; margin-top: 32px; padding: 26px 0; border-top: 1px solid #304960; text-align: left; }
+.footer-brand { display: flex; align-items: center; gap: 12px; }
+.footer-mark { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: #ff7a00; color: #081a2d; font-weight: 900; font-size: 24px; }
+.footer-brand b { color: #edf5ff; font-size: 18px; }
+.footer-brand p { color: #a8bdd2; margin: 5px 0 0; font-size: 12px; line-height: 1.5; }
+.footer-author { display: flex; flex-direction: column; gap: 6px; text-align: right; }
+.footer-author span { color: #a8bdd2; font-size: 11px; }
+.footer-author strong { color: #edf5ff; font-size: 14px; }
+.site-footer .footer-author small { color: #a8bdd2; font-size: 11px; }
+@media (max-width: 600px) { .site-footer { flex-direction: column; align-items: flex-start; } .footer-author { text-align: left; } }
