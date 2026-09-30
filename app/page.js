@@ -2,15 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { TEXTS } from '../lib/race-texts'
 import { measureEdit, exerciseResult, isCourseComplete } from '../lib/learning.mjs'
-
-const TEXTS = [
-  'A prática constante transforma precisão em velocidade. Mantenha os olhos na tela e deixe os dedos encontrarem as teclas com naturalidade.',
-  'Digitar bem não significa apenas correr. Primeiro construa precisão, depois aumente o ritmo sem perder o controle das mãos.',
-  'Tecnologia, estudo e trabalho ficam mais fluidos quando a digitação deixa de exigir esforço consciente e passa a acontecer por memória muscular.',
-  'Pequenas sessões todos os dias costumam funcionar melhor do que um treino longo e cansativo. Regularidade é parte importante da evolução.',
-  'Posicione os indicadores sobre F e J, relaxe os ombros e mantenha os punhos neutros enquanto percorre o teclado sem olhar para as mãos.'
-]
 
 const LESSONS = [
   { title: 'Linha base', keys: 'asdf jklç', objective: 'Fixar a posição inicial das mãos e voltar naturalmente para F e J.', text: 'asdf jklç asdf jklç fj fj dk dk sl sl aç aç' },
@@ -39,7 +32,7 @@ const MODE_WORDS = [
   'resultado','treino','acerto','natural','tempo','linha','base','técnica'
 ]
 
-function generateTrainingText(mode = 'text') {
+function generateTrainingText(mode = 'text', previousText = '') {
   if (mode === 'words') {
     return Array.from({ length: 24 }, (_, i) => MODE_WORDS[(i * 7 + Math.floor(Math.random() * MODE_WORDS.length)) % MODE_WORDS.length]).join(' ')
   }
@@ -53,7 +46,8 @@ function generateTrainingText(mode = 'text') {
     return Array.from({ length: 5 }, (_, i) => groups[(i + Math.floor(Math.random() * groups.length)) % groups.length]).join('   ')
   }
 
-  return TEXTS[Math.floor(Math.random() * TEXTS.length)]
+  const choices = TEXTS.filter(item => item !== previousText)
+  return choices[Math.floor(Math.random() * choices.length)]
 }
 
 const randomText = () => generateTrainingText('text')
@@ -281,7 +275,7 @@ function Trainer({ user, onSaved, initialText }) {
     saveResult()
   }, [finished, user, saved, input, text, elapsed, stats, errorEvents, mode, onSaved])
 
-  function reset(nextDuration = duration, nextText = generateTrainingText(mode)) {
+  function reset(nextDuration = duration, nextText = generateTrainingText(mode, text)) {
     setDuration(nextDuration); setTimeLeft(nextDuration); setText(nextText); setInput('')
     setStarted(false); setFinished(false); setSaved(false); setAttempts(0); setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
@@ -379,13 +373,13 @@ function Trainer({ user, onSaved, initialText }) {
     </button>
     <div className="trainer-footer">
       <p>{started ? 'Turbo ligado — mantenha os olhos na tela.' : finished ? 'Corrida finalizada.' : 'Comece a digitar para largar.'}</p>
-      <button className="secondary-btn" onClick={() => reset(duration, generateTrainingText(mode))}>Nova corrida</button>
+      <button className="secondary-btn" onClick={() => reset(duration, generateTrainingText(mode, text))}>Nova corrida</button>
     </div>
     {finished && <div className="result-box">
       <p className="eyebrow">CHEGADA {user && saved ? '• RASTRO SALVO' : ''}</p>
       <div className="result-main"><strong>{stats.wpm}</strong><span>PPM</span></div>
       <p>{stats.accuracy >= 97 ? 'Ótima precisão. Agora tente aumentar o ritmo gradualmente.' : stats.accuracy >= 93 ? 'Bom equilíbrio. Tente reduzir os erros antes de acelerar.' : 'Priorize a precisão no próximo treino e diminua um pouco o ritmo.'}</p>
-      <button className="primary-btn" onClick={() => reset(duration, generateTrainingText(mode))}>Correr novamente</button>
+      <button className="primary-btn" onClick={() => reset(duration, generateTrainingText(mode, text))}>Correr novamente</button>
     </div>}
   </section>
 }
