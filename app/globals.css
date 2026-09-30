@@ -2148,3 +2148,11 @@ footer:before{display:none}
     aspect-ratio:16/9;
   }
 }
+
+/* Filtros e paginação do histórico de corridas */
+.history-filters{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0}
+.history-filters label{display:flex;flex-direction:column;gap:7px;flex:1;min-width:180px;color:var(--muted);font-size:13px}
+.history-filters select{width:100%;padding:11px 12px;border:1px solid #36536b;border-radius:10px;background:#0c2033;color:#f8fafc;font:inherit}
+.history-filters select:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.history-pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:18px}
+.history-pagination span{color:var(--muted);font-size:13px}

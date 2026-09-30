@@ -974,82 +974,121 @@ function PerformanceChart({ sessions, metric, goal, title, suffix = '' }) {
 
 function Dashboard({ user, refreshKey }) {
   const [sessions, setSessions] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(Boolean(user))
   const [goals, setGoals] = useState({ daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 })
   const [goalDraft, setGoalDraft] = useState({ daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 })
   const [goalMessage, setGoalMessage] = useState('')
   const [savingGoals, setSavingGoals] = useState(false)
 
-  useEffect(() => {
-    if (!user) { setSessions([]); return }
-    setLoading(true)
-    supabase.from('typing_sessions').select('*').order('created_at', { ascending: false }).limit(500)
-      .then(({ data }) => { setSessions(data || []); setLoading(false) })
-  }, [user, refreshKey])
+  const [loadError, setLoadError] = useState('')
+  const [reload, setReload] = useState(0)
+  const [goalsStatus, setGoalsStatus] = useState(user ? 'loading' : 'ready')
+  const [historyMode, setHistoryMode] = useState('all')
+  const [historyDays, setHistoryDays] = useState('all')
+  const [historyPage, setHistoryPage] = useState(1)
 
   useEffect(() => {
     if (!user) return
-    supabase.from('user_typing_goals')
-      .select('daily_runs_goal, ppm_goal, accuracy_goal')
-      .eq('user_id', user.id)
-      .maybeSingle()
-      .then(async ({ data, error }) => {
-        if (error) return
-        if (data) {
-          const loaded = {
-            daily_runs_goal: Number(data.daily_runs_goal),
-            ppm_goal: Number(data.ppm_goal),
-            accuracy_goal: Number(data.accuracy_goal)
-          }
-          setGoals(loaded)
-          setGoalDraft(loaded)
-          return
-        }
+    let cancelled = false
+    setLoading(true)
+    setLoadError('')
+    async function load() {
+      try {
+        if (!supabase) throw new Error('unavailable')
+        const { data, error } = await supabase.from('typing_sessions')
+          .select('id, created_at, wpm, accuracy, errors, duration_seconds, mode')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }).order('id', { ascending: false }).limit(500)
+        if (error) throw error
+        if (!cancelled) { setSessions(data || []); setHistoryPage(1) }
+      } catch {
+        if (!cancelled) setLoadError('Não foi possível carregar seu histórico. Tente novamente.')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [user?.id, refreshKey, reload])
 
-        const defaults = { user_id: user.id, daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 }
-        const { error: insertError } = await supabase.from('user_typing_goals').insert(defaults)
-        if (!insertError) {
-          const clean = { daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 }
-          setGoals(clean)
-          setGoalDraft(clean)
-        }
-      })
-  }, [user])
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    setGoalsStatus('loading')
+    async function loadGoals() {
+      try {
+        if (!supabase) throw new Error('unavailable')
+        const { data, error } = await supabase.from('user_typing_goals')
+          .select('daily_runs_goal, ppm_goal, accuracy_goal')
+          .eq('user_id', user.id).maybeSingle()
+        if (error) throw error
+        if (cancelled) return
+        const loaded = data ? {
+          daily_runs_goal: Number(data.daily_runs_goal),
+          ppm_goal: Number(data.ppm_goal),
+          accuracy_goal: Number(data.accuracy_goal)
+        } : { daily_runs_goal: 5, ppm_goal: 60, accuracy_goal: 97 }
+        setGoals(loaded)
+        setGoalDraft(loaded)
+        setGoalsStatus('ready')
+      } catch {
+        if (!cancelled) setGoalsStatus('error')
+      }
+    }
+    loadGoals()
+    return () => { cancelled = true }
+  }, [user?.id, reload])
 
   async function saveGoals(e) {
     e.preventDefault()
-    if (!user) return
+    if (!user || savingGoals || goalsStatus !== 'ready') return
     setGoalMessage('')
 
     const clean = {
-      daily_runs_goal: Math.min(50, Math.max(1, Number(goalDraft.daily_runs_goal) || 1)),
-      ppm_goal: Math.min(300, Math.max(1, Number(goalDraft.ppm_goal) || 1)),
+      daily_runs_goal: Math.min(50, Math.max(1, Math.round(Number(goalDraft.daily_runs_goal)) || 1)),
+      ppm_goal: Math.min(300, Math.max(1, Math.round(Number(goalDraft.ppm_goal)) || 1)),
       accuracy_goal: Math.min(100, Math.max(50, Number(goalDraft.accuracy_goal) || 50))
     }
 
     setSavingGoals(true)
-    const { error } = await supabase.from('user_typing_goals').upsert({
-      user_id: user.id,
-      ...clean,
-      updated_at: new Date().toISOString()
-    })
-    setSavingGoals(false)
-
-    if (error) {
+    try {
+      if (!supabase) throw new Error('unavailable')
+      const { data, error } = await supabase.from('user_typing_goals').upsert({
+        user_id: user.id, ...clean, updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' })
+        .select('daily_runs_goal, ppm_goal, accuracy_goal').single()
+      if (error || !data) throw error || new Error('missing result')
+      setGoals(clean)
+      setGoalDraft(clean)
+      setGoalMessage('Metas salvas.')
+    } catch {
       setGoalMessage('Não consegui salvar agora. Tente novamente.')
-      return
+    } finally {
+      setSavingGoals(false)
     }
-
-    setGoals(clean)
-    setGoalDraft(clean)
-    setGoalMessage('Metas salvas.')
   }
 
-  if (!user) return <section className="panel empty-state"><p className="eyebrow">ESTATÍSTICAS</p><h2>Entre para acompanhar sua evolução</h2><p className="muted">Seus resultados serão salvos por conta e protegidos pelo Supabase.</p></section>
+  if (!user) return <section className="panel empty-state"><p className="eyebrow">ESTATÍSTICAS</p><h2>Entre para acompanhar sua evolução</h2><p className="muted">Entre na sua conta para ver o histórico e acompanhar suas metas.</p></section>
   if (loading) return <section className="panel"><p className="muted">Carregando estatísticas...</p></section>
 
+  if (loadError || goalsStatus === 'error') return <section className="panel">
+    <p role="alert">{loadError || 'Não foi possível carregar suas metas. Tente novamente.'}</p>
+    <button className="secondary-btn" onClick={() => setReload(value => value + 1)}>Tentar novamente</button>
+  </section>
+  if (goalsStatus === 'loading') return <section className="panel"><p role="status">Carregando suas metas...</p></section>
+
+  const cutoff = new Date()
+  cutoff.setHours(0, 0, 0, 0)
+  cutoff.setDate(cutoff.getDate() - (Number(historyDays) - 1))
+  const filteredHistory = sessions.filter(item =>
+    (historyMode === 'all' || item.mode === historyMode) &&
+    (historyDays === 'all' || new Date(item.created_at) >= cutoff)
+  )
+  const historyPages = Math.max(1, Math.ceil(filteredHistory.length / 20))
+  const currentHistoryPage = Math.min(historyPage, historyPages)
+  const visibleHistory = filteredHistory.slice((currentHistoryPage - 1) * 20, currentHistoryPage * 20)
   const count = sessions.length
-  const avgWpm = count ? Math.round(sessions.reduce((a,s) => a+s.wpm,0)/count) : 0
+  const avgWpm = count ? Math.round(sessions.reduce((a,s) => a+Number(s.wpm),0)/count) : 0
   const bestWpm = count ? Math.max(...sessions.map(s => s.wpm)) : 0
   const avgAcc = count ? (sessions.reduce((a,s) => a+Number(s.accuracy),0)/count).toFixed(1) : '0.0'
   const totalXp = sessions.reduce((total, s) => {
@@ -1118,7 +1157,7 @@ function Dashboard({ user, refreshKey }) {
 
   return <section className="dashboard-stack">
     <div className="panel">
-      <p className="eyebrow">PAINEL TURBO</p><h2>Seu desempenho na pista</h2><p className="muted small-copy">Aqui eu junto os dados dos seus últimos treinos para ficar mais fácil perceber a evolução.</p>
+      <p className="eyebrow">PAINEL TURBO</p><h2>Seu desempenho na pista</h2><p className="muted small-copy">Indicadores dos seus últimos 500 treinos, considerando todos os modos. Datas e metas diárias seguem o horário do seu dispositivo.</p>
       <div className="stats-row dashboard-stats">
         <Stat label="Treinos" value={count} /><Stat label="PPM médio" value={avgWpm} />
         <Stat label="Recorde" value={bestWpm} /><Stat label="Precisão média" value={avgAcc} suffix="%" />
@@ -1157,9 +1196,9 @@ function Dashboard({ user, refreshKey }) {
             <input type="number" min="50" max="100" step="0.1" value={goalDraft.accuracy_goal}
               onChange={e => setGoalDraft(g => ({ ...g, accuracy_goal: e.target.value }))} />
           </label>
-          <button className="secondary-btn" disabled={savingGoals}>{savingGoals ? 'Salvando...' : 'Salvar metas'}</button>
+          <button className="secondary-btn" disabled={savingGoals || goalsStatus !== 'ready'}>{savingGoals ? 'Salvando...' : 'Salvar metas'}</button>
         </form>
-        {goalMessage && <small className="goal-message">{goalMessage}</small>}
+        {goalMessage && <small role="status" className="goal-message">{goalMessage}</small>}
 
         <div className="goal-progress-grid">
           <div className="goal-progress-card">
@@ -1196,7 +1235,7 @@ function Dashboard({ user, refreshKey }) {
             <p className="eyebrow">EVOLUÇÃO</p>
             <h3>Como seus últimos treinos estão andando</h3>
           </div>
-          <small>Gráficos simples, sem biblioteca externa.</small>
+          <small>Compare velocidade e precisão nas últimas 12 corridas.</small>
         </div>
         <div className="evolution-grid">
           <PerformanceChart sessions={sessions} metric="wpm" goal={goals.ppm_goal} title="Velocidade" suffix=" PPM" />
@@ -1229,12 +1268,26 @@ function Dashboard({ user, refreshKey }) {
     </div>
     <div className="panel">
       <p className="eyebrow">RASTRO</p>
-      {sessions.length === 0 ? <p className="muted">Finalize sua primeira corrida para começar o rastro.</p> :
-        <div className="history-list">{sessions.map(s => <div className="history-row" key={s.id}>
+      <div className="history-filters">
+        <label>Período<select value={historyDays} onChange={e => { setHistoryDays(e.target.value); setHistoryPage(1) }}>
+          <option value="all">Todo o histórico carregado</option><option value="1">Hoje</option><option value="7">Últimos 7 dias</option><option value="30">Últimos 30 dias</option>
+        </select></label>
+        <label>Modo de treino<select value={historyMode} onChange={e => { setHistoryMode(e.target.value); setHistoryPage(1) }}>
+          <option value="all">Todos os modos</option>{TRAINING_MODES.map(item => <option value={item.id} key={item.id}>{item.label}</option>)}
+        </select></label>
+      </div>
+      <p className="muted small-copy" role="status">{filteredHistory.length} corrida(s) encontrada(s). Os filtros afetam apenas o histórico.</p>
+      {sessions.length === 0 ? <p className="muted">Finalize sua primeira corrida para começar o rastro.</p> : filteredHistory.length === 0 ? <p className="muted">Nenhuma corrida neste período e modo.</p> :
+        <div className="history-list">{visibleHistory.map(s => <div className="history-row" key={s.id}>
           <div><strong>{s.wpm} PPM</strong><span>{new Date(s.created_at).toLocaleString('pt-BR')}</span></div>
           <div><b>{Number(s.accuracy).toFixed(1)}%</b><span>{s.errors} erros · {s.duration_seconds}s · {TRAINING_MODES.find(item => item.id === s.mode)?.label || 'Treino'}</span></div>
         </div>)}</div>
       }
+      {historyPages > 1 && <div className="history-pagination">
+        <button className="secondary-btn" disabled={currentHistoryPage === 1} onClick={() => setHistoryPage(value => value - 1)}>Página anterior</button>
+        <span>Página {currentHistoryPage} de {historyPages}</span>
+        <button className="secondary-btn" disabled={currentHistoryPage === historyPages} onClick={() => setHistoryPage(value => value + 1)}>Próxima página</button>
+      </div>}
     </div>
   </section>
 }
@@ -1281,7 +1334,7 @@ export default function Home() {
 
       {tab === 'treinar' && <Trainer user={user} initialText={huntText} onSaved={() => setRefreshKey(k => k+1)} />}
       {tab === 'aprender' && <Learn key={user?.id || 'guest'} user={user} />}
-      {tab === 'estatisticas' && <Dashboard user={user} refreshKey={refreshKey} />}
+      {tab === 'estatisticas' && <Dashboard key={user?.id || 'guest'} user={user} refreshKey={refreshKey} />}
       {tab === 'caca' && <HuntMode user={user} onTrain={(text) => { setHuntText(text); setTab('treinar') }} />}
 
       <footer>
