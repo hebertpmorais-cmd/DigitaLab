@@ -2189,3 +2189,5 @@ footer:before{display:none}
 @media (max-width: 600px) { .site-footer { flex-direction: column; align-items: flex-start; } .footer-author { text-align: left; } }
 
 .learn-lessons { max-height: 340px; overflow-y: auto; padding: 4px 8px 4px 4px; scrollbar-width: thin; scrollbar-color: #547392 #081a2d; }
+
+.race-guide-toggle { display: flex; justify-content: flex-end; margin: 12px 0; }

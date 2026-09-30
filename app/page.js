@@ -212,7 +212,73 @@ function AuthBox({ user, onClose }) {
   </div>
 }
 
+function TypingGuide({ char, endLabel = 'Exercício concluído' }) {
+  const practiceKeyboardRows = [
+    ['Q','W','E','R','T','Y','U','I','O','P'],
+    ['A','S','D','F','G','H','J','K','L','Ç'],
+    ['Z','X','C','V','B','N','M',',','.',';']
+  ]
+
+  const currentPracticeChar = char
+
+  const currentPracticeKey = currentPracticeChar === ' '
+    ? 'ESPAÇO'
+    : currentPracticeChar.toLocaleUpperCase('pt-BR')
+
+  const currentPracticeFinger = currentPracticeChar === ' '
+    ? 'Polegar'
+    : fingerForKey(currentPracticeChar)
+
+  const currentPracticeHand = currentPracticeChar === ' '
+    ? 'Ambas as mãos'
+    : currentPracticeFinger.endsWith(' E')
+      ? 'Mão esquerda'
+      : currentPracticeFinger.endsWith(' D')
+        ? 'Mão direita'
+        : 'Tecla especial'
+  return <>
+      <div className="finger-coach">
+        <div className="finger-coach-main">
+          <span>Próxima tecla</span>
+          <strong>{currentPracticeKey || '✓'}</strong>
+        </div>
+        <div className="finger-coach-info">
+          <div><span>Dedo</span><b>{currentPracticeChar ? currentPracticeFinger : endLabel}</b></div>
+          <div><span>Mão</span><b>{currentPracticeChar ? currentPracticeHand : '—'}</b></div>
+        </div>
+      </div>
+
+      <div className="practice-keyboard" aria-label="Teclado virtual ABNT2">
+        {practiceKeyboardRows.map((row,rowIndex) => <div className="practice-keyboard-row" key={rowIndex}>
+          {row.map(key => {
+            const targetKey = currentPracticeChar.toLocaleLowerCase('pt-BR') === 'ç' ? 'ç' : normalizeKey(currentPracticeChar)
+            const target = key.toLocaleLowerCase('pt-BR') === targetKey
+            const anchor = key === 'F' || key === 'J'
+            return <div className={`practice-key ${target ? 'target' : ''} ${anchor ? 'anchor' : ''}`} key={key}>
+              {key}
+            </div>
+          })}
+        </div>)}
+        <div className="practice-space-row">
+          <div className={`practice-space ${currentPracticeChar === ' ' ? 'target' : ''}`}>ESPAÇO</div>
+        </div>
+      </div>
+  </>
+}
+
 function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
+  const [showGuide, setShowGuide] = useState(false)
+  useEffect(() => {
+    try { setShowGuide(localStorage.getItem('ratoturbo-race-guide') === 'true') } catch {}
+  }, [])
+
+  function toggleGuide() {
+    const next = !showGuide
+    setShowGuide(next)
+    try { localStorage.setItem('ratoturbo-race-guide', String(next)) } catch {}
+    inputRef.current?.focus()
+  }
+
   const [targetedText, setTargetedText] = useState(initialText || '')
   const [duration, setDuration] = useState(30)
   const [mode, setMode] = useState('text')
@@ -388,6 +454,14 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
       <textarea ref={inputRef} className="hidden-input" value={input} onChange={handleChange}
         onPaste={e => e.preventDefault()} autoFocus spellCheck={false} aria-label="Campo de digitação" />
     </button>
+    <div className="race-guide-toggle">
+      <button type="button" className="secondary-btn" aria-expanded={showGuide} aria-controls="race-typing-guide" onClick={toggleGuide}>
+        {showGuide ? 'Ocultar guia do teclado' : 'Mostrar guia do teclado'}
+      </button>
+    </div>
+    {showGuide && <div id="race-typing-guide">
+      <TypingGuide char={finished ? '' : text[input.length] || ''} endLabel="Corrida finalizada" />
+    </div>}
     <div className="trainer-footer">
       <p>{started ? 'Turbo ligado — mantenha os olhos na tela.' : finished ? 'Corrida finalizada.' : 'Comece a digitar para largar.'}</p>
       <button className="secondary-btn" onClick={() => reset()}>{targetedText ? 'Recomeçar treino' : 'Nova corrida'}</button>
@@ -432,31 +506,7 @@ function Learn({ user }) {
   const practiceAccuracy = result.accuracy.toFixed(1)
   const navigationBusy = loadStatus !== 'ready' || saveStatus === 'saving' || saveStatus === 'error'
 
-  const practiceKeyboardRows = [
-    ['Q','W','E','R','T','Y','U','I','O','P'],
-    ['A','S','D','F','G','H','J','K','L','Ç'],
-    ['Z','X','C','V','B','N','M',',','.',';']
-  ]
 
-  const currentPracticeChar = practiceInput.length < practiceText.length
-    ? practiceText[practiceInput.length]
-    : ''
-
-  const currentPracticeKey = currentPracticeChar === ' '
-    ? 'ESPAÇO'
-    : currentPracticeChar.toLocaleUpperCase('pt-BR')
-
-  const currentPracticeFinger = currentPracticeChar === ' '
-    ? 'Polegar'
-    : fingerForKey(currentPracticeChar)
-
-  const currentPracticeHand = currentPracticeChar === ' '
-    ? 'Ambas as mãos'
-    : currentPracticeFinger.endsWith(' E')
-      ? 'Mão esquerda'
-      : currentPracticeFinger.endsWith(' D')
-        ? 'Mão direita'
-        : 'Tecla especial'
 
   useEffect(() => {
     let cancelled = false
@@ -723,31 +773,7 @@ function Learn({ user }) {
         <CharacterText text={practiceText} input={practiceInput} />
       </div>
 
-      <div className="finger-coach">
-        <div className="finger-coach-main">
-          <span>Próxima tecla</span>
-          <strong>{currentPracticeKey || '✓'}</strong>
-        </div>
-        <div className="finger-coach-info">
-          <div><span>Dedo</span><b>{currentPracticeChar ? currentPracticeFinger : 'Exercício concluído'}</b></div>
-          <div><span>Mão</span><b>{currentPracticeChar ? currentPracticeHand : '—'}</b></div>
-        </div>
-      </div>
-
-      <div className="practice-keyboard" aria-label="Teclado virtual ABNT2">
-        {practiceKeyboardRows.map((row,rowIndex) => <div className="practice-keyboard-row" key={rowIndex}>
-          {row.map(key => {
-            const target = currentPracticeChar !== ' ' && normalizeKey(key) === normalizeKey(currentPracticeChar)
-            const anchor = key === 'F' || key === 'J'
-            return <div className={`practice-key ${target ? 'target' : ''} ${anchor ? 'anchor' : ''}`} key={key}>
-              {key}
-            </div>
-          })}
-        </div>)}
-        <div className="practice-space-row">
-          <div className={`practice-space ${currentPracticeChar === ' ' ? 'target' : ''}`}>ESPAÇO</div>
-        </div>
-      </div>
+      <TypingGuide char={practiceInput.length < practiceText.length ? practiceText[practiceInput.length] : ''} />
 
       <textarea
         className="practice-entry"
