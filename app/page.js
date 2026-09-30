@@ -138,10 +138,10 @@ const METRIC_HELP = {
 function Stat({ label, value, suffix = '', help = false }) {
   return <div className={`stat-card${help ? ' stat-with-help' : ''}`}>
     <span>{label}</span><strong>{value}{suffix}</strong>
-    {help && <details className="stat-help">
-      <summary aria-label={`Entenda ${label}`} title={`Entenda ${label}`}>?</summary>
-      <p>{METRIC_HELP[label]}</p>
-    </details>}
+    {help && <div className="stat-help">
+      <button type="button" aria-label={`Entenda ${label}`} aria-describedby={`metric-help-${label}`} onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur() }}>?</button>
+      <p role="tooltip" id={`metric-help-${label}`}>{METRIC_HELP[label]}</p>
+    </div>}
   </div>
 }
 

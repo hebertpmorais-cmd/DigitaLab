@@ -2167,11 +2167,16 @@ footer:before{display:none}
 .trainer-panel .stats-row { align-items: start; }
 .stat-with-help { padding-right: 46px; min-height: 88px; }
 .stat-with-help:after { pointer-events: none; }
-.stat-help summary { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; display: grid; place-items: center; list-style: none; border: 1px solid #547392; border-radius: 50%; background: #123451; color: #d9ebff; cursor: pointer; font-size: 14px; font-weight: 700; }
-.stat-help summary::-webkit-details-marker { display: none; }
-.stat-help summary:hover, .stat-help[open] summary { background: #ffe05e; color: #102238; border-color: #ffe05e; }
-.stat-help summary:focus-visible { outline: 3px solid #ff9a4b; outline-offset: 3px; }
-.stat-help p { margin: 14px -30px 0 0; padding-top: 12px; border-top: 1px solid #304960; color: #c4d3e3; font-size: 12px; line-height: 1.65; }
+ .stat-with-help { overflow: visible; }
+.stat-with-help:hover, .stat-with-help:focus-within { z-index: 20; }
+.stat-help { position: absolute; top: 12px; right: 12px; }
+.stat-help button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #547392; border-radius: 50%; background: #123451; color: #d9ebff; cursor: help; font-size: 14px; font-weight: 700; }
+.stat-help button:hover, .stat-help button:focus { background: #ffe05e; color: #102238; border-color: #ffe05e; }
+.stat-help button:focus-visible { outline: 3px solid #ff9a4b; outline-offset: 3px; }
+.stat-help p { position: absolute; top: 100%; left: -12px; width: min(260px, calc(100vw - 64px)); margin: 0; padding: 14px; border: 1px solid #547392; border-radius: 10px; background: #102238; box-shadow: 0 12px 32px #0006; color: #e2ecf7; font-size: 12px; line-height: 1.65; visibility: hidden; opacity: 0; pointer-events: none; z-index: 30; }
+.stat-help:hover p, .stat-help:focus-within p { visibility: visible; opacity: 1; pointer-events: auto; }
+.stat-with-help:nth-last-child(-n+2) .stat-help p { left: auto; right: 0; }
+@media (max-width: 800px) { .stat-with-help .stat-help p { left: auto; right: -12px; } .stat-with-help:nth-child(odd) .stat-help p { left: -80px; right: auto; } }
 .site-footer { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 24px; margin-top: 32px; padding: 26px 0; border-top: 1px solid #304960; text-align: left; }
 .footer-brand { display: flex; align-items: center; gap: 12px; }
 .footer-mark { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: #ff7a00; color: #081a2d; font-weight: 900; font-size: 24px; }
