@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { raceClock } from '../lib/race-clock.mjs'
 import { persistRace } from '../lib/race-save.mjs'
 import { TEXTS } from '../lib/race-texts'
 import { measureEdit, exerciseResult, isCourseComplete } from '../lib/learning.mjs'
@@ -207,7 +208,9 @@ function Trainer({ user, onSaved, initialText }) {
   const [mode, setMode] = useState('text')
   const [text, setText] = useState(initialText || TEXTS[0])
   const [input, setInput] = useState('')
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [elapsed, setElapsed] = useState(0)
+  const startedAt = useRef(null)
+  const timeLeft = Math.ceil(duration - elapsed)
   const [started, setStarted] = useState(false)
   const [finished, setFinished] = useState(false)
   const [saveStatus, setSaveStatus] = useState('idle')
@@ -215,7 +218,6 @@ function Trainer({ user, onSaved, initialText }) {
   const [attempts, setAttempts] = useState(0)
   const [errorEvents, setErrorEvents] = useState([])
   const inputRef = useRef(null)
-  const elapsed = duration - timeLeft
   const stats = useMemo(
     () => calcStats(input, text, elapsed, attempts, errorEvents.length),
     [input, text, elapsed, attempts, errorEvents.length]
@@ -226,7 +228,7 @@ function Trainer({ user, onSaved, initialText }) {
       setMode('text')
       setText(initialText)
       setInput('')
-      setTimeLeft(duration)
+      setElapsed(0); startedAt.current = null
       setStarted(false)
       setFinished(false)
       setSaveStatus('idle'); raceSave.current = { id: null, busy: false }
@@ -237,14 +239,20 @@ function Trainer({ user, onSaved, initialText }) {
 
   useEffect(() => {
     if (!started || finished) return
-    if (timeLeft <= 0) { setFinished(true); setStarted(false); return }
-    const timer = setTimeout(() => setTimeLeft(v => v - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [started, finished, timeLeft])
-
-  useEffect(() => {
-    if (input.length >= text.length && started) { setFinished(true); setStarted(false) }
-  }, [input, text, started])
+    function tick() {
+      const clock = raceClock(startedAt.current, performance.now(), duration)
+      setElapsed(clock.elapsed)
+      if (clock.expired) { setFinished(true); setStarted(false) }
+    }
+    const timer = setInterval(tick, 100)
+    document.addEventListener('visibilitychange', tick)
+    window.addEventListener('focus', tick)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', tick)
+      window.removeEventListener('focus', tick)
+    }
+  }, [started, finished, duration])
 
   async function saveResult() {
     const attempt = raceSave.current
@@ -256,7 +264,7 @@ function Trainer({ user, onSaved, initialText }) {
       const result = await persistRace(supabase, {
         id: attempt.id,
         user_id: user.id,
-        duration_seconds: Math.max(1, elapsed),
+        duration_seconds: Math.max(1, Math.ceil(elapsed)),
         mode,
         wpm: stats.wpm,
         cpm: stats.cpm,
@@ -279,7 +287,7 @@ function Trainer({ user, onSaved, initialText }) {
   }, [finished, user, input, saveStatus])
 
   function reset(nextDuration = duration, nextText = generateTrainingText(mode, text)) {
-    setDuration(nextDuration); setTimeLeft(nextDuration); setText(nextText); setInput('')
+    setDuration(nextDuration); setElapsed(0); startedAt.current = null; setText(nextText); setInput('')
     setStarted(false); setFinished(false); setSaveStatus('idle'); raceSave.current = { id: null, busy: false }; setAttempts(0); setErrorEvents([])
     setTimeout(() => inputRef.current?.focus(), 30)
   }
@@ -288,7 +296,7 @@ function Trainer({ user, onSaved, initialText }) {
     setMode(nextMode)
     setText(generateTrainingText(nextMode))
     setInput('')
-    setTimeLeft(duration)
+    setElapsed(0); startedAt.current = null
     setStarted(false)
     setFinished(false)
     setSaveStatus('idle'); raceSave.current = { id: null, busy: false }
@@ -299,41 +307,29 @@ function Trainer({ user, onSaved, initialText }) {
 
   function handleChange(e) {
     if (finished) return
-    const value = e.target.value.slice(0, text.length)
-
-    if (value.length > input.length) {
-      let prefix = 0
-      while (prefix < input.length && prefix < value.length && input[prefix] === value[prefix]) prefix++
-
-      const addedCount = value.length - input.length
-      const added = value.slice(prefix, prefix + addedCount)
-
-      if (added.length) {
-        setAttempts(total => total + added.length)
-
-        const newErrors = []
-        for (let offset = 0; offset < added.length; offset++) {
-          const position = prefix + offset
-          const typedChar = added[offset]
-          const expectedChar = text[position] ?? ''
-
-          if (typedChar !== expectedChar) {
-            newErrors.push({
-              position,
-              expected: expectedChar,
-              typed: typedChar
-            })
-          }
-        }
-
-        if (newErrors.length) {
-          setErrorEvents(current => [...current, ...newErrors])
-        }
-      }
+    const now = performance.now()
+    const clock = raceClock(startedAt.current, now, duration)
+    // Check the deadline before accepting input, even if a timer was delayed.
+    if (clock.expired) {
+      setElapsed(clock.elapsed)
+      setFinished(true)
+      setStarted(false)
+      return
     }
-
-    if (!started && value.length > 0) setStarted(true)
+    const value = e.target.value.slice(0, text.length)
+    const edit = measureEdit(input, value, text)
+    setAttempts(total => total + edit.attempts)
+    if (edit.mistakes.length) setErrorEvents(current => [...current, ...edit.mistakes])
+    if (startedAt.current === null && value.length > 0) {
+      startedAt.current = now
+      setStarted(true)
+    }
+    setElapsed(clock.elapsed)
     setInput(value)
+    if (value.length >= text.length && value.length > 0) {
+      setFinished(true)
+      setStarted(false)
+    }
   }
 
   return <section className="panel trainer-panel">
