@@ -2074,14 +2074,14 @@ footer:before{display:none}
 .final-guides .final-guide-card img{
   display:block;
   width:100%;
-  aspect-ratio:16/9;
-  object-fit:cover;
+  aspect-ratio:1672/941;
+  object-fit:contain;
   padding:0;
   margin:0;
   border:0;
   border-radius:0;
   background:#061525;
-  transform:scale(1.005);
+  transform:none;
 }
 .final-guides .final-guide-footer{
   padding:14px 16px 16px;
@@ -2122,8 +2122,8 @@ footer:before{display:none}
   max-width:none;
 }
 .final-guides .final-guide-card:nth-child(5) img{
-  aspect-ratio:16/7.6;
-  object-fit:cover;
+  aspect-ratio:1672/941;
+  object-fit:contain;
 }
 .guide-modal-content{
   width:min(1180px,96vw);
