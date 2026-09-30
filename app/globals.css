@@ -2156,3 +2156,9 @@ footer:before{display:none}
 .history-filters select:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 .history-pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:18px}
 .history-pagination span{color:var(--muted);font-size:13px}
+
+.history-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.clear-history { margin: 18px 0; padding: 20px; border: 1px solid #f97316; border-radius: 16px; background: #102238; }
+.clear-history p { margin: 12px 0; line-height: 1.6; }
+.clear-history label { display: grid; gap: 8px; margin: 16px 0; }
+.clear-history input { width: 100%; max-width: 320px; padding: 12px; border: 1px solid #64748b; border-radius: 8px; background: #071827; color: #fff; }
