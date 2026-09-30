@@ -1412,7 +1412,7 @@ export default function Home() {
 
       <footer className="site-footer">
         <div className="footer-brand"><span className="footer-mark" aria-hidden="true">R</span><div><b>RatoTurbo</b><p>Pratique no seu ritmo. Evolua a cada corrida.</p></div></div>
-        <div className="footer-author"><span>Autoria e desenvolvimento</span><strong>Hebert Pereira Morais</strong><small>Projeto pessoal · Feito aos poucos, com dedicação.</small></div>
+        <div className="footer-author"><span>Autoria e desenvolvimento</span><strong>Hebert Pereira Morais</strong><small>Projeto pessoal</small></div>
       </footer>
     </div>
     {authOpen && <AuthBox user={user} onClose={() => setAuthOpen(false)} />}
