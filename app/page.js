@@ -280,6 +280,26 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
     inputRef.current?.focus()
   }
 
+  const [targetedText, setTargetedText] = useState(initialText || '')
+  const [duration, setDuration] = useState(30)
+  const [mode, setMode] = useState('text')
+  const [text, setText] = useState(initialText || TEXTS[0])
+  const [input, setInput] = useState('')
+  const [elapsed, setElapsed] = useState(0)
+  const startedAt = useRef(null)
+  const timeLeft = Math.ceil(duration - elapsed)
+  const [started, setStarted] = useState(false)
+  const [finished, setFinished] = useState(false)
+  const [saveStatus, setSaveStatus] = useState('idle')
+  const raceSave = useRef({ id: null, busy: false })
+  const [attempts, setAttempts] = useState(0)
+  const [errorEvents, setErrorEvents] = useState([])
+  const inputRef = useRef(null)
+  const stats = useMemo(
+    () => calcStats(input, text, elapsed, attempts, errorEvents.length),
+    [input, text, elapsed, attempts, errorEvents.length]
+  )
+
   const [recentTexts, setRecentTexts] = useState([])
   const [textsReady, setTextsReady] = useState(false)
   useEffect(() => {
@@ -308,26 +328,6 @@ function Trainer({ user, onSaved, initialText, onLeaveHunt }) {
     setMode(item.mode)
     reset(duration, item.text)
   }
-
-  const [targetedText, setTargetedText] = useState(initialText || '')
-  const [duration, setDuration] = useState(30)
-  const [mode, setMode] = useState('text')
-  const [text, setText] = useState(initialText || TEXTS[0])
-  const [input, setInput] = useState('')
-  const [elapsed, setElapsed] = useState(0)
-  const startedAt = useRef(null)
-  const timeLeft = Math.ceil(duration - elapsed)
-  const [started, setStarted] = useState(false)
-  const [finished, setFinished] = useState(false)
-  const [saveStatus, setSaveStatus] = useState('idle')
-  const raceSave = useRef({ id: null, busy: false })
-  const [attempts, setAttempts] = useState(0)
-  const [errorEvents, setErrorEvents] = useState([])
-  const inputRef = useRef(null)
-  const stats = useMemo(
-    () => calcStats(input, text, elapsed, attempts, errorEvents.length),
-    [input, text, elapsed, attempts, errorEvents.length]
-  )
 
   useEffect(() => {
     if (initialText) {
